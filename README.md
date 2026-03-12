@@ -74,7 +74,6 @@ docker exec -it postgres psql -U postgres -c "CREATE DATABASE portal WITH ENCODI
 docker exec -it postgres psql -U postgres -c "CREATE DATABASE langfuse WITH ENCODING 'UTF8';"
 ```
 
-
 </details>
 
 
