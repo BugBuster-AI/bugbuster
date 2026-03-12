@@ -1,0 +1,12 @@
+.wrapper {
+    flex: 1;
+    position: relative
+}
+
+.contextControl {
+    position: absolute;
+    top: 50%;
+    z-index: 9;
+    transform: translateY(-50%);
+    right: 8px;
+}

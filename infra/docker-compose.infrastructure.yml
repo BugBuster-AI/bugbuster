@@ -1,0 +1,100 @@
+networks:
+  bugbuster:
+    external: true
+
+services:
+  ### MINIO #####################################################
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_PORT_UI}:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+  mc:
+    image: minio/mc:latest
+    container_name: mc
+    depends_on:
+      - minio
+    networks: [bugbuster]
+    entrypoint: /bin/sh
+    tty: true
+  ### POSTGRES ###################################################
+  postgres:
+    image: postgres:16
+    container_name: postgres
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "127.0.0.1:${DB_PORT}:5432"
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASS}
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=500"
+      - "-c"
+      - "shared_buffers=1GB"
+
+  ### REDIS ######################################################
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "127.0.0.1:${REDIS_PORT}:6379"
+    command: >
+      redis-server --save 60 1 --requirepass ${REDIS_PASSWORD}
+      --loglevel warning --maxmemory-policy noeviction
+    volumes:
+      - redis_data:/data
+
+  ### RABBITMQ ###################################################
+  rabbitmq:
+    image: rabbitmq:3.10.7-management
+    container_name: rabbitmq
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "${RABBIT_PORT_UI}:15672"
+      - "127.0.0.1:${RABBIT_PORT}:5672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBIT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBIT_PASSWORD}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+  ### CLICKHOUSE ###################################################
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.2
+    container_name: clickhouse
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "127.0.0.1:${CLICKHOUSE_NATIVE_PORT}:9000"
+      - "127.0.0.1:${CLICKHOUSE_INTER_SERVER_PORT}:9009"
+      - "127.0.0.1:${CLICKHOUSE_HTTP_PORT}:8123"
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - clickhouse_log:/var/log/clickhouse-server
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  rabbitmq_data:
+  clickhouse_data:
+  clickhouse_log:

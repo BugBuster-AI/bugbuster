@@ -1,0 +1,216 @@
+networks:
+  bugbuster:
+    external: true
+services:
+  ### BACKEND ###################################################
+  # migrations #
+  alembic:
+    image: bugbuster/backend:latest
+    container_name: alembic_migrations
+    networks: [bugbuster]
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+    restart: "no"
+    entrypoint: ["alembic"]
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    image: bugbuster/backend:latest
+    container_name: backend
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "${UVICORN_PORT}:7665"
+    labels:
+      app_version: "latest"
+    hostname: ${SERVER_IDENT}
+    environment:
+      DOMAIN: ${DOMAIN}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      RABBIT_HOST: ${RABBIT_HOST}
+      RABBIT_PORT: ${RABBIT_PORT}
+      RABBIT_USER: ${RABBIT_USER}
+      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      UVICORN_PORT: 7665
+      SECRET_KEY: ${SECRET_KEY}
+      SECRET_KEY_API: ${SECRET_KEY_API}
+      SECRET_KEY_INVITING: ${SECRET_KEY_INVITING}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      MINIO_HOST: ${MINIO_HOST}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_SECURE: ${MINIO_SECURE}
+      MINIO_USE_INTERNAL_PROXY: ${MINIO_USE_INTERNAL_PROXY}
+      CLICKER_IP: ${REWRITER_IP}
+      CLICKER_PORT: ${REWRITER_PORT}
+      SMTP_ENABLED: ${SMTP_ENABLED}
+      SMTP_SERVER: ${SMTP_SERVER}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      TRACE_VIEWER_HOST: ${TRACE_VIEWER_HOST}
+ ### FRONTEND TMS ###############################################
+  frontend_tms:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    image: bugbuster/frontend_tms:latest
+    container_name: frontend_tms
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "${FRONTEND_PORT}:${FRONTEND_PORT}"
+    labels:
+      app_version: "latest"
+    hostname: ${SERVER_IDENT}
+    environment:
+      PORT: ${FRONTEND_PORT}
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL}
+      VITE_LANGUAGE: ${VITE_LANGUAGE}
+      VITE_APP_VERSION: ${VITE_APP_VERSION}
+  clicker:
+    build:
+      context: ..
+      dockerfile: clicker/Dockerfile
+    image: bugbuster/clicker:latest
+    container_name: clicker
+    restart: unless-stopped
+    networks: [bugbuster]
+    labels:
+      app_version: "latest"
+    hostname: ${SERVER_IDENT}
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      RABBIT_HOST: ${RABBIT_HOST}
+      RABBIT_PORT: ${RABBIT_PORT}
+      RABBIT_USER: ${RABBIT_USER}
+      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      MINIO_HOST: ${MINIO_HOST}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_SECURE: ${MINIO_SECURE}
+      OPENROUTER_BASE_URL: ${INFERENCE_BASE_URL}
+      OPENROUTER_API_KEY: ${INFERENCE_API_KEY}
+      OPENROUTER_PROVIDER: ${OPENROUTER_PROVIDER}
+      OPENROUTER_ALLOW_FALLBACKS: ${OPENROUTER_ALLOW_FALLBACKS}
+      QWEN3_VL_BASE_URL: ${INFERENCE_BASE_URL}
+      QWEN3_VL_API_KEY: ${INFERENCE_API_KEY}
+      QWEN3_VL_MODEL_NAME: ${INFERENCE_MODEL_NAME}
+      INFERENCE_BASE_URL: ${INFERENCE_BASE_URL}
+      INFERENCE_API_KEY: ${INFERENCE_API_KEY}
+      INFERENCE_MODEL_NAME: ${INFERENCE_MODEL_NAME}
+      LANGFUSE_HOST: ${LANGFUSE_HOST}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_CLICKER_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_CLICKER_SECRET_KEY}
+      LOCALHOST_DISABLED: ${LOCALHOST_DISABLED}
+      SERVER_IDENT: ${SERVER_IDENT}
+    command: >
+      celery -A main_celery worker
+      --loglevel=info
+      --pool=processes
+      --concurrency=${CONCURRENCY}
+      --max-tasks-per-child=1
+      --prefetch-multiplier=1
+      -n "clicker_${SERVER_IDENT}@%h"    
+  rewriter:
+    image: bugbuster/clicker:latest
+    container_name: rewriter
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "${REWRITER_PORT}:${REWRITER_PORT}"
+    labels:
+      app_version: "latest"
+    hostname: ${SERVER_IDENT}
+    environment:
+      UVICORN_PORT: ${REWRITER_PORT}
+      MINIO_HOST: ${MINIO_HOST}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_SECURE: ${MINIO_SECURE}
+      OPENROUTER_BASE_URL: ${INFERENCE_BASE_URL}
+      OPENROUTER_API_KEY: ${INFERENCE_API_KEY}
+      OPENROUTER_PROVIDER: ${OPENROUTER_PROVIDER}
+      OPENROUTER_ALLOW_FALLBACKS: ${OPENROUTER_ALLOW_FALLBACKS}
+      QWEN3_VL_BASE_URL: ${INFERENCE_BASE_URL}
+      QWEN3_VL_API_KEY: ${INFERENCE_API_KEY}
+      QWEN3_VL_MODEL_NAME: ${INFERENCE_MODEL_NAME}
+      INFERENCE_BASE_URL: ${INFERENCE_BASE_URL}
+      INFERENCE_API_KEY: ${INFERENCE_API_KEY}
+      INFERENCE_MODEL_NAME: ${INFERENCE_MODEL_NAME}
+      SOP_REWRITER_BASE_URL: ${SOP_REWRITER_BASE_URL}
+      SOP_REWRITER_API_KEY: ${SOP_REWRITER_API_KEY}
+      SOP_REWRITER_MODEL_NAME: ${SOP_REWRITER_MODEL_NAME}
+      SOP_REWRITER_PROVIDER: ${SOP_REWRITER_PROVIDER}
+      LANGFUSE_HOST: ${LANGFUSE_HOST}
+      LANGFUSE_PUBLIC_KEY: ${LANGFUSE_REWRITER_PUBLIC_KEY}
+      LANGFUSE_SECRET_KEY: ${LANGFUSE_REWRITER_SECRET_KEY}
+      SERVER_IDENT: ${SERVER_IDENT}
+  video_generate_service:
+    build:
+      context: ../infra/video-generate-service
+      dockerfile: Dockerfile
+    image: bugbuster/video_generate_service:latest
+    container_name: video_generate_service
+    restart: unless-stopped
+    networks: [bugbuster]
+    labels:
+      app_version: "latest"
+    hostname: ${SERVER_IDENT}
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      RABBIT_HOST: ${RABBIT_HOST}
+      RABBIT_PORT: ${RABBIT_PORT}
+      RABBIT_USER: ${RABBIT_USER}
+      RABBIT_PASSWORD: ${RABBIT_PASSWORD}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      MINIO_HOST: ${MINIO_HOST}
+      MINIO_PORT: ${MINIO_PORT}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_SECURE: ${MINIO_SECURE}
+  playwright_viewer:
+    build:
+      context: ../infra/playwright-viewer
+      dockerfile: Dockerfile
+    image: bugbuster/playwright_viewer:latest
+    container_name: playwright_viewer
+    restart: unless-stopped
+    networks: [bugbuster]
+    ports:
+      - "${TRACE_VIEWER_PORT}:${TRACE_VIEWER_PORT}"
+    labels:
+      app_version: "latest"
+    hostname: ${SERVER_IDENT}
+    environment:
+      PORT: ${TRACE_VIEWER_PORT}
+ 

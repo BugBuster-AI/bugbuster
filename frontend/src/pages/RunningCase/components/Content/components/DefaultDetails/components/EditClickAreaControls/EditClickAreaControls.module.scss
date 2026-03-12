@@ -1,0 +1,57 @@
+.wrapper {
+    margin-block: 8px;
+    width: 100%;
+    
+    &.editing {
+        border-radius: 12px;
+        padding: 16px 20px;
+        background-color: white;
+    }
+
+    .buttons {
+        justify-self: flex-end;
+        margin-left: auto;
+    }
+
+    .colorItem {
+        width: 24px;
+        height: 24px;
+        cursor: pointer;
+        border-radius: 50%;
+        background-color: var(--selection-color);
+        transition: .3s ease;
+
+        &:hover {
+            opacity: 0.8;
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
+
+        &.selected {
+            outline-offset: 2px;
+            outline: 2px solid var(--selection-color);
+        }
+    }
+}
+
+.outContainer {
+    width: 100%;
+    align-items: flex-end;
+}
+
+.bottomWrapper {
+    margin-block: 8px;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+
+    .bottomControlButtons {
+
+    }
+
+    .screenshotSwitch  {
+        margin-right: auto;
+    }
+}

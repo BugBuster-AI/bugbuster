@@ -1,0 +1,17 @@
+.retryWrapper {
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.retrySettings {
+  padding-left: 24px;
+  padding-top: 8px;
+}
+
+.retryCheckbox {
+
+  & > :global(.ant-checkbox) {
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+}

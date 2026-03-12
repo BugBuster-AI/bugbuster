@@ -1,0 +1,194 @@
+.dropdown {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.08), 0 3px 6px -4px rgba(0, 0, 0, 0.12), 0 9px 28px 8px rgba(0, 0, 0, 0.05);
+  z-index: 1050;
+  max-height: 256px;
+  overflow: auto;
+  width: 256px;
+  padding: 4px 0;
+}
+
+.dropdownMenu {
+  max-height: 200px !important;
+}
+
+.dropdownItem {
+  padding: 5px 12px;
+  cursor: pointer;
+  background-color: transparent;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  line-height: 1.5714285714285714;
+  transition: background-color 0.2s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.selectedItem {
+  background-color: rgba(0, 0, 0, 0.04) !important;
+  font-weight: 600;
+}
+
+/* Wrapper for the textarea component */
+.textareaWrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+  min-width: 0;
+  font-size: 14px;
+}
+
+/* Base styles for the textarea - based on Ant Design's TextArea */
+.highlightTextarea {
+  position: relative;
+  display: inline-block;
+  width: 100% !important;
+  min-height: 32px;
+  padding: 4px 11px;
+  color: rgba(0, 0, 0, 0.88);
+  font-size: 14px;
+  line-height: 1.5714285714285714;
+  background-color: #ffffff;
+  background-image: none;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  transition: all 0.2s;
+  box-sizing: border-box;
+
+  /* Remove default Draft.js styles */
+  :global(.DraftEditor-root) {
+    width: 100%;
+    height: 100%;
+    min-height: 20px;
+    position: relative;
+  }
+
+  :global(.DraftEditor-editorContainer) {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  :global(.public-DraftEditor-content) {
+    min-height: 20px;
+    outline: none;
+  }
+
+  :global(.public-DraftEditorPlaceholder-root) {
+    color: rgba(0, 0, 0, 0.25);
+    position: absolute;
+    pointer-events: none;
+  }
+}
+
+/* Hover state */
+.hovered {
+  border-color: #4096ff;
+}
+
+/* Focus state */
+.focused {
+  border-color: #4096ff;
+  box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+  outline: 0;
+}
+
+/* Error state */
+.error {
+  border-color: #ff4d4f !important;
+
+  &.focused {
+    box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.1);
+  }
+
+  &.hovered {
+    border-color: #ff7875 !important;
+  }
+}
+
+/* Warning state */
+.warning {
+  border-color: #faad14 !important;
+
+  &.focused {
+    box-shadow: 0 0 0 2px rgba(250, 173, 20, 0.1);
+  }
+
+  &.hovered {
+    border-color: #ffc53d !important;
+  }
+}
+
+/* Disabled state */
+.disabled {
+  color: rgba(0, 0, 0, 0.25);
+  background-color: rgba(0, 0, 0, 0.04);
+  border-color: #d9d9d9;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 1;
+
+  :global(.public-DraftEditorPlaceholder-root) {
+    color: rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* Borderless state */
+.borderless {
+  border-color: transparent !important;
+  box-shadow: none !important;
+
+  &:hover, &.focused {
+    border-color: transparent !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Clear button */
+.clearBtn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: rgba(0, 0, 0, 0.25);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.3s;
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.45);
+  }
+}
+
+/* Text count */
+.textCount {
+  position: absolute;
+  bottom: -22px;
+  right: 8px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.dropdownItemWrapper {
+  padding: 0 !important;
+}
+
+.singleLine {
+  // Эти стили применяются к внутренним элементам draft-js
+  :global(.public-DraftStyleEditor-content),
+  :global(.public-DraftStyleDefault-block) {
+    white-space: nowrap !important; // Запрещаем перенос текста
+    overflow: hidden !important; // Скрываем текст, который не помещается
+  }
+}

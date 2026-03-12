@@ -1,0 +1,454 @@
+@import 'fonts';
+
+/* Предотвращаем дергание страницы при появлении скроллбара */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+.ant-form-item-required {
+  &::before {
+    display: none !important;
+  }
+}
+
+.ant-form-item-label {
+  padding-bottom: 4px !important;
+}
+
+.text-12 {
+  font-size: 12px !important;
+}
+
+form div.ant-form-item-explain .ant-form-item-explain-error:not(:first-child) {
+  display: none;
+}
+
+.no-error-messages div.ant-form-item-explain .ant-form-item-explain-error {
+  display: none
+}
+
+.no-error .ant-form-item-explain-error {
+  display: none;
+}
+
+.middle-form-margin div.ant-form-item {
+  margin-bottom: 16px;
+}
+
+.form-item-no-margin div.ant-form-item {
+  margin-bottom: 0;
+}
+
+.custom-icon {
+  color: var(--color-icon)
+}
+
+.ant-btn-icon .custom-icon {
+  color: inherit !important;
+}
+
+.header-accordion {
+  align-items: center !important;
+  padding: 4px 16px !important;
+}
+
+.history-steps .ant-steps-item-title {
+  width: 100%
+}
+
+.ant-steps-item-finish .ant-steps-item-icon {
+  background-color: var(--color-success) !important;
+
+  .ant-steps-icon {
+    color: var(--color-step-icon) !important;
+
+    & > span {
+      color: inherit;
+    }
+  }
+}
+
+.ant-steps-item-error .ant-steps-item-icon {
+  background-color: var(--color-error) !important;
+
+  .ant-steps-icon {
+    color: var(--color-step-icon) !important;
+
+    & > span {
+      color: inherit;
+    }
+  }
+}
+
+.ant-steps-item-tail {
+  &::after {
+    background-color: var(--color-border) !important;
+  }
+}
+
+
+//
+
+.ant-tree-treenode-disabled .ant-tree-node-content-wrapper {
+  cursor: default;
+  background: transparent;
+}
+
+/* Убираем отступы для таблиц */
+.ant-tree .ant-table {
+  margin: 8px 0;
+}
+
+/* Стили для кастомного switcher */
+.ant-tree-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Убираем отступы для табличных узлов */
+.custom-tree-table .no-indent-node .ant-tree-node-content-wrapper {
+  padding-left: 0 !important;
+}
+
+.custom-tree-table .ant-tree-node-content-wrapper:hover {
+  background: transparent;
+}
+
+/* Скрываем иконку раскрытия для табличных узлов */
+.custom-tree-table .no-indent-node .ant-tree-switcher {
+  display: none;
+}
+
+.custom-tree-table .ant-tree-indent {
+  order: -99
+}
+
+// Отключаем задержку чекбокса
+.custom-tree-table .ant-tree-checkbox-inner {
+  transition: 0s !important;
+
+  &:after {
+    transition: 0s !important;
+  }
+}
+
+.selectable-no-transition .ant-checkbox-inner {
+  transition: 0s !important;
+
+  &:after {
+    transition: 0s !important;
+  }
+}
+
+/* Выравниваем заголовок сьюта */
+.custom-tree-table .ant-tree-treenode:not(.no-indent-node) {
+  align-items: center;
+}
+
+/* Компенсируем стандартные отступы дерева */
+.custom-tree-table .ant-tree-indent-unit {
+  width: 24px;
+}
+
+.custom-tree-table .ant-tree-checkbox {
+  order: -1;
+}
+
+.custom-tree-table .ant-tree-switcher {
+  order: 0
+}
+
+.custom-tree-table {
+  .ant-tree-node-content-wrapper {
+    padding-left: 0 !important;
+  }
+
+  .ant-tree-switcher .custom-icon {
+    color: black !important;
+  }
+
+  .no-indent-node {
+    .ant-tree-indent {
+      & > span:last-child {
+        display: none
+      }
+    }
+  }
+
+}
+
+.ant-pro-table-drag-icon {
+  margin-right: 0;
+}
+
+.log-card-images {
+  .ant-image {
+    max-height: 150px;
+  }
+}
+
+.runs-progress-bar {
+  border-radius: 0;
+
+  &:first-child {
+    border-top-left-radius: 6px;
+    border-bottom-left-radius: 6px;
+  }
+
+  &:last-child {
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+  }
+}
+
+/****************************/
+/* Реализация выделение всей ноды при наведении/выборе на tree node */
+/****************************/
+
+.ant-tree-treenode[data-active="true"] {
+  border: 1px solid black !important;
+
+}
+
+.full-selected-node-tree {
+
+  .ant-tree-node-content-wrapper {
+    position: initial
+  }
+
+  .ant-tree-treenode {
+    border-radius: 4px !important;
+    transition: 0.3s ease;
+
+    border: 1px solid transparent;
+
+    &:has(.active-tree-node) {
+      border: 1px solid black;
+    }
+  }
+
+  .ant-tree-treenode:has( > .ant-tree-node-content-wrapper:hover) {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  .ant-tree-treenode-selected {
+    background-color: var(--color-tree-selected) !important;
+    border-radius: 4px;
+    transition: 0.3s ease;
+
+
+    .ant-tree-node-selected {
+      background-color: transparent;
+    }
+  }
+
+  .ant-tree-node-content-wrapper:hover {
+    background-color: transparent !important;
+  }
+
+}
+
+/****************************/
+
+/* Кликабельный row табилцы */
+
+.clickable-row {
+  cursor: pointer;
+
+  &:hover {
+    background: #fafafa;
+  }
+}
+
+.no-errors-margin {
+  &.ant-form-item {
+    margin-bottom: 0;
+  }
+}
+
+.extra-warning {
+  &.ant-form-item-has-error {
+    .ant-form-item-extra {
+      display: none;
+    }
+  }
+
+  &:has(.ant-form-item-extra) {
+    .ant-input {
+      border-color: var(--color-error);
+
+      &:focus {
+        box-shadow: 0 0 0 2px rgba(255, 38, 5, 0.06);
+      }
+    }
+  }
+
+  .ant-form-item-extra {
+    color: var(--color-error);
+  }
+}
+
+.step-indicator {
+  display: block;
+}
+
+.history-steps .step-indicator {
+  border-radius: 50%;
+}
+
+.step-title-fullwidth .ant-steps-item-title {
+  width: 100% !important;
+}
+
+// отключение превью для картинок
+.ant-image-mask {
+  opacity: 0 !important;
+}
+
+// для добавления скролла в attachments
+.ant-steps-item-title {
+  width: 100%
+}
+
+.image-with-hover {
+  margin: 4px;
+
+  & > .ant-image-img {
+    border: 1.5px solid transparent;
+    border-radius: 6px;
+    padding: 2px;
+  }
+
+  &:hover {
+    & > .ant-image-img {
+      border-radius: 6px;
+
+      border: 1.5px solid black !important;
+    }
+  }
+}
+
+// Высота строки таблицы
+.middle-row-height {
+  height: 68px !important;
+}
+
+// Убираем cursor: not-allowed с tree table
+.table-tree-node .ant-tree-node-content-wrapper {
+  cursor: initial !important
+}
+
+.ant-menu-item {
+  &:has(.active) {
+    color: #1677ff;
+
+    &:hover {
+      color: #1677ff;
+    }
+
+    svg {
+      color: #1677ff;
+    }
+
+    background: #e6f4ff;
+  }
+}
+
+/** DND */
+
+.drag-over-upward {
+  border-top: 2px dashed #1890ff;
+}
+
+.drag-over-downward {
+  border-bottom: 2px dashed #1890ff;
+}
+
+.drag-row {
+  background: #fafafa;
+}
+
+.table-row {
+  transition: transform 0.2s ease;
+}
+
+.ant-form-item-control {
+  &:has(.ant-form-item-explain-error) {
+    .ant-form-item-control-input {
+      textarea {
+        border-color: var(--color-error);
+
+        &:focus {
+
+          box-shadow: 0 0 0 2px rgba(255, 38, 5, 0.06);
+        }
+      }
+    }
+  }
+}
+
+
+/** чтобы Segmented занимал всю ширину */
+.segmented-full-width {
+  width: 100%;
+
+  .ant-segmented-item {
+    width: 100%;
+  }
+}
+
+/** Чтобы в карточке историй не было отсупа снизу у последнего степа */
+.history-card-item .ant-steps-item {
+  &:last-child {
+    padding-bottom: 0 !important;
+  }
+}
+
+.run-steps-item .ant-steps-item {
+  &:last-child {
+    padding-bottom: 0 !important;
+  }
+}
+
+// подсветка переменных в названии степа
+.step-name {
+  span[data-variable] {
+    color: rgba(22, 119, 255, 1);
+  }
+}
+
+// добавление переноса строк в названии степа
+.test-case-step-name.step-type-result {
+  white-space: pre-line;
+}
+
+.grab-button {
+  cursor: grab !important
+}
+
+.width-100 {
+  width: 100% !important;
+}
+
+.ant-tabs-tabpane:focus-visible {
+  outline: none !important;
+}
+
+.text-truncated {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+}
+
+.editable-row {
+  td {
+    vertical-align: top;
+  }
+}
+
+// отключает скроллбар 
+.no-scrollbar {
+  scrollbar-width: none;
+}

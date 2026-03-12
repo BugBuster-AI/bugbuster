@@ -1,0 +1,5 @@
+.title {
+  & > span[data-variable] {
+    color: rgba(22, 119, 255, 1)
+  }
+}

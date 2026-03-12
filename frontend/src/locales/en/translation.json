@@ -1,0 +1,1255 @@
+{
+  "head": {
+    "title": {
+      "ai": "Screenmate AI",
+      "ru": "BugBuster AI"
+    }
+  },
+  "stepTypes": {
+    "command": "Step",
+    "action": "Step",
+    "step": "Step",
+    "expected_result": "Expected result",
+    "api": "API request",
+    "shared_step": "Shared step"
+  },
+  "resultVerifications": {
+    "state": "State verification",
+    "dynamic": "Dynamic changes verification"
+  },
+  "contextScreenshot": {
+    "clarifyElement": "Clarify element with screenshot",
+    "stepUse": "This step uses a context screenshot. Accuracy depends on screen resolution",
+    "info": "This option binds the visual element clarification to the current screen resolution. In other resolutions, this clarification will not be applied",
+    "requireArea": "First, you need to select an area on the screenshot",
+    "notUsing": "Context screenshot was not used because its resolution differs from the main screenshot resolution",
+    "delete": "The context screenshot will be deleted when the test case is saved. After deletion, the element will be identified using text description only.",
+    "deleteTitle": "Delete context screenshot?"
+  },
+  "apiForm": {
+    "ok": "Save",
+    "url": "https://example.com",
+    "messages": {
+      "validationError": "Validation error.",
+      "saved": "Saved"
+    },
+    "cancel": "Cancel",
+    "title": "API Settings",
+    "params": {
+      "name": "Params",
+      "key": "Key",
+      "value": "Value",
+      "delete": "Sure to delete?"
+    },
+    "headers": {
+      "name": "Headers",
+      "key": "Key",
+      "value": "Value",
+      "delete": "Sure to delete?"
+    },
+    "body": {
+      "name": "Body",
+      "formData": {
+        "key": "Key",
+        "value": "Value",
+        "delete": "Sure to delete?"
+      },
+      "urlEncoded": {
+        "key": "Key",
+        "value": "Value",
+        "delete": "Sure to delete?"
+      }
+    },
+    "variables": {
+      "name": "Variables",
+      "variableName": "Variable Name",
+      "responsePath": "Response Path",
+      "variable": "Variable",
+      "delete": "Sure to delete?"
+    },
+    "validation": {
+      "name": "Validation",
+      "target": "Target",
+      "validationType": "Validation Type",
+      "expectedValue": "Expected Value",
+      "validation": "Validation",
+      "delete": "Sure to delete?"
+    }
+  },
+  "stepGroups": {
+    "before_browser_start": "Before Browser Start",
+    "before_steps": "Before Case Steps",
+    "steps": "Test Case Steps",
+    "after_steps": "After Test Steps",
+    "shared_steps": "Steps"
+  },
+  "mobilePlaceholder": {
+    "ai": {
+      "first": {
+        "title": "Desktop version only",
+        "description": "Leave your email and we'll send you an invitation to the system",
+        "input": "Enter email",
+        "error": "Email is required",
+        "emailError": "Invalid email",
+        "button": "Get invitation",
+        "errors": {
+          "alreadyUser": "User already exists!",
+          "default": "Error submitting form. Please try again later."
+        }
+      },
+      "checked": {
+        "title": "Invitation sent",
+        "description": "Check your email - we've sent an invitation to access the platform"
+      }
+    },
+    "ru": {
+      "first": {
+        "title": "Только десктоп-версия",
+        "description": "Оставьте email, и мы вышлем вам приглашение в систему",
+        "input": "Укажите email",
+        "error": "Email обязателен",
+        "emailError": "Некорректный email",
+        "button": "Получить приглашение",
+        "errors": {
+          "alreadyUser": "Пользователь уже существует!",
+          "default": "Ошибка при отправке формы. Пожалуйста, попробуйте позже."
+        }
+      },
+      "checked": {
+        "title": "Отправили приглашение",
+        "description": "Проверьте ваш email — мы отправили приглашение для доступа к платформе"
+      }
+    }
+  },
+  "authPage": {
+    "ru": {
+      "title": "Тест-кейсы, которые\nработают сами",
+      "description": "Простая автоматизация тестирования на естественном языке.\n Без сложной инфраструктуры и кода"
+    },
+    "ai": {
+      "title": "No-Code Automation Testing",
+      "description": "Create UI tests using natural language with an AI-powered solution."
+    }
+  },
+  "validation_error": {
+    "title": "Validation error",
+    "text": "A validation error has been detected. The test case has not been saved. Please, fix the validation errors or change the Execution type to <b>Manual.</b>",
+    "drag_drop_result_after_shared": "Expected result cannot be placed after Shared step"
+  },
+  "streams": {
+    "workspace": "Workspace streams: {{info}}",
+    "workspaceOnly": "Workspace streams:",
+    "project": "Project streams: {{info}}",
+    "projectOnly": "Project streams:",
+    "run": "Streams usage: {{info}}",
+    "free_streams": "Free streams:"
+  },
+  "header": {
+    "projects": "Projects",
+    "plans": {
+      "tariffName": "{{name}} plan",
+      "tariffExpired": "{{name}} Expired",
+      "upgrade": "Upgrade",
+      "buyStreams": "Buy Streams"
+    },
+    "workspace": "Workspace",
+    "dropdown": {
+      "admin": "Admin",
+      "workspaces": "Workspaces",
+      "sign_out": "Sign out"
+    }
+  },
+  "plans": {
+    "title": "Plans",
+    "best": "Best value",
+    "free": "Free",
+    "currentPlan": "Current plan",
+    "upgradePlan": "Upgrade plan",
+    "contactUs": "Contact us",
+    "monthly": "Monthly",
+    "annual": "Annual (save 20%)",
+    "history": "Payment history",
+    "changePlan": "Change plan"
+  },
+  "paymentHistory": {
+    "id": "ID",
+    "date": "Date",
+    "paymentDate": "Payment Date",
+    "services": "Services",
+    "action": "Action",
+    "status": "Status",
+    "bill": "Bill",
+    "check": "Check",
+    "dueDate": "Due date",
+    "invoiceDate": "Invoice Date"
+  },
+  "paymentStatuses": {
+    "draft": "Draft",
+    "submitted": "Submitted",
+    "failed": "Failed",
+    "executed": "Executed",
+    "overdue": "Overdue"
+  },
+  "contactUs": {
+    "title": "Contact us",
+    "username": "Username",
+    "email": "Email",
+    "message": "Message",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "messagePlaceholder": "Please enter your message",
+    "emailPlaceholder": "Please enter your email",
+    "usernamePlaceholder": "Please enter your username"
+  },
+  "buy_streams": {
+    "buy_streams_title": "Buying additional streams",
+    "invoiceIssued": "Invoice successfully issued",
+    "title": "Purchase of subscription",
+    "inn": "Taxpayer Identification Number / ИНН",
+    "kpp": "Registration reason code / КПП",
+    "individual": "Individual",
+    "corporate": "Corporate",
+    "streamCount": "Stream count",
+    "additionalStreams": "Additional streams",
+    "promo": "Promo code",
+    "name": "Name",
+    "payment": "Payment amount",
+    "paymentByCard": "Payment by card",
+    "ok": "Issue an invoice",
+    "auto_renew": "Auto renew",
+    "summary": {
+      "title": "Summary",
+      "tariff": "Tariff",
+      "additionalTotal": "Additional streams count",
+      "discount": "Discount",
+      "total": "Total"
+    },
+    "teamPlan": {
+      "title": "Team plan",
+      "monthly": {
+        "title": "Monthly"
+      }
+    }
+  },
+  "workspace": {
+    "index": "Workspace",
+    "logs": {
+      "title": "Logs"
+    },
+    "billing": {
+      "expired": {
+        "title": "Your plan has expired",
+        "subtitle": "To continue using it, please renew your plan or choose another one"
+      },
+      "expiredModal": {
+        "title": "Your plan has expired",
+        "goToBilling": "Go to Billing",
+        "cancel": "Cancel",
+        "currentPlan": "Current plan",
+        "subtitle": "Your current plan has expired <strong>{{date}}</strong>. To continue using it, please renew your plan or choose another one"
+      },
+      "title": "Billing",
+      "info": {
+        "limits": "Limits",
+        "streams": "Streams",
+        "tariffEndDate": "Tariff end date",
+        "testCases": "Test cases",
+        "recorderEntries": "Recorder entries",
+        "buy": "Buy streams",
+        "team_plan": "Team plan"
+      }
+    },
+    "sidebar": {
+      "users": "Users",
+      "api_keys": "API Keys",
+      "logs": "Logs",
+      "billing": "Billing"
+    },
+    "api_keys": {
+      "create_button": "Create API key",
+      "create_title": "Create API Key",
+      "edit_title": "Edit API Key",
+      "success_title": "API Key Created",
+      "success_message": "Please save this token. You will not be able to see it again.",
+      "copy_success": "Token copied to clipboard",
+      "delete_confirm": "Are you sure you want to delete this API key? The key will be deleted permanently. It cannot be restored or re‑activated.",
+      "delete_button": "Delete token?",
+      "title": "API keys",
+      "table": {
+        "name": "Name",
+        "status": "Status",
+        "created_at": "Created at",
+        "expires_at": "Expires at"
+      },
+      "modal": {
+        "ok": "Save",
+        "close": "Close",
+        "cancel": "Cancel",
+        "name": "Name",
+        "name_placeholder": "Token Name",
+        "expires_at": "Expires at",
+        "status": "Status"
+      }
+    }
+  },
+  "unique_key_active": "Active",
+  "unique_key_inactive": "Inactive",
+  "users": {
+    "invite_limit": "Added maximum number of users for this workspace",
+    "title": "Users",
+    "invite": "Invite User",
+    "filter": "Add filter",
+    "table": {
+      "user": "User",
+      "status": "Status",
+      "role": "Role",
+      "role_title": "Role Title",
+      "projects": "Projects",
+      "last_action": "Last Action",
+      "minutes_ago": "minutes ago",
+      "hours_ago": "hours ago",
+      "days_ago": "days ago"
+    },
+    "projects_modal": {
+      "title": "Projects",
+      "body": "The user {{name}} is a member of projects:",
+      "save": "Save",
+      "cancel": "Cancel",
+      "item": "Project Name"
+    },
+    "edit_name_modal": {
+      "placeholder": "Enter name",
+      "title": "Edit name",
+      "workspace_name": "Workspace name",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "delete_confirm": {
+      "remove": "Remove",
+      "cancel": "Cancel",
+      "title": "Remove {{name}}",
+      "body": "Are you sure you want to remove user {{name}} with role name {{role}} from {{workspace}}?"
+    },
+    "invite_modal": {
+      "profile_title": "Profile Settings",
+      "ok": "Invite",
+      "cancel": "Cancel",
+      "title": "Invite new user",
+      "email": {
+        "label": "Email",
+        "placeholder": "example@example.com"
+      },
+      "first_name": {
+        "label": "First name",
+        "placeholder": "For example: John"
+      },
+      "last_name": {
+        "label": "Last name",
+        "placeholder": "For example: Smith"
+      },
+      "role_title": {
+        "label": "Role title",
+        "placeholder": "For example: Manager"
+      },
+      "role": {
+        "label": "Role",
+        "placeholder": "Select a role"
+      },
+      "projects": {
+        "label": "Projects",
+        "placeholder": "Select projects"
+      }
+    }
+  },
+  "grouped_run": {
+    "table": {
+      "name": "Name",
+      "streams": "Streams",
+      "status": "Status",
+      "deadline": "Deadline",
+      "author": "Author",
+      "time": "Time",
+      "stats": "Test run stats"
+    },
+    "buttons": {
+      "run": "Run",
+      "stop": "Stop",
+      "rerun": "Retest",
+      "submit": "Submit result",
+      "remove": "Remove",
+      "status_filter": "Status Filter",
+      "settings": "Settings"
+    }
+  },
+  "filters": {
+    "clear": "Clear selection"
+  },
+  "drawerTabs": {
+    "run_history": "Run History",
+    "execution": "Execution",
+    "general": "General"
+  },
+  "statuses": {
+    "preparation": "Preparation",
+    "index_type": "Type: ",
+    "index_status": "Status: ",
+    "in_progress": "In Progress",
+    "in_queue": "In Queue",
+    "stop_in_progress": "Stop in progress",
+    "untested": "Untested",
+    "passed": "Passed",
+    "failed": "Failed",
+    "blocked": "Blocked",
+    "retest": "Retest",
+    "invalid": "Invalid",
+    "stopped": "Stopped",
+    "scheduled": "Scheduled",
+    "after_step_failure": "After step failure"
+  },
+  "caseTypes": {
+    "index": "Type: ",
+    "automated": "Automated",
+    "manual": "Manual"
+  },
+  "casePriorities": {
+    "index": "Priority: ",
+    "Low": "Low",
+    "Medium": "Medium",
+    "High": "High"
+  },
+  "table": {
+    "id": "ID",
+    "type": "Type",
+    "name": "Name",
+    "status": "Status",
+    "duration": "Duration"
+  },
+  "steps": {
+    "before_steps": "Before Test Steps",
+    "after_steps": "After Test Steps",
+    "steps": "Test Steps",
+    "result": "Result",
+    "shared_step_group": "Shared Step Group",
+    "steps_count": "steps"
+  },
+  "group_steps": {
+    "before": "Before Test Steps",
+    "step": "Test Case Steps",
+    "after": "After Test Steps",
+    "before_browser": "Before Browser Start"
+  },
+  "no_streams_available": {
+    "title": "No streams available",
+    "content": "Automatic execution is not possible. Either run the Test Cases manually or set the <b>Max parallel limits</b> in the project to more then 0."
+  },
+  "common": {
+    "selectAll": "Select all",
+    "unlimited": "Unlimited",
+    "month": "month",
+    "noExpiration": "No expiration",
+    "save": "Save",
+    "save_run": "Save and Run",
+    "close": "Close",
+    "until": "until",
+    "upgrade": "Upgrade",
+    "streams": "streams",
+    "not_found": "Not found",
+    "variable": "variable",
+    "variables": "variables",
+    "sec": "sec",
+    "min": "min",
+    "success": "Success",
+    "h": "h",
+    "case": "Case",
+    "api_error": "Something went wrong. Please try again later.",
+    "delete_title": "Delete",
+    "upload": "Upload",
+    "description": "Description",
+    "video_loading": "Please wait, generating video",
+    "ok": "OK",
+    "go_back": "Go back",
+    "confirm_text": "Are you sure you want to delete?",
+    "button_new_project": "New Project",
+    "default_error": "Fetch error",
+    "default_empty": "No data",
+    "not_selected": "No data selected",
+    "input_search": {
+      "placeholder": "Search"
+    },
+    "no_steps": "No steps",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "copied": "URL copied to clipboard!",
+    "copy": "Copy",
+    "simpleCopied": "Copied",
+    "success_created": "Successfully created",
+    "success_updated": "Successfully updated"
+  },
+  "messages": {
+    "success": {
+      "update": {
+        "test_case": "Test case has been updated"
+      },
+      "delete": {
+        "projects": "Project \"{{name}}\" has been deleted",
+        "suite": "Suite \"{{name}}\" has been deleted",
+        "common": "Delete successful"
+      },
+      "edit": {
+        "projects": "Project \"{{name}}\" has been updated"
+      },
+      "create": {
+        "test_case": "Test case has been created",
+        "suite": "Suite has been created"
+      }
+    },
+    "warning": {
+      "create": {
+        "test_case": "Test case has been created, but has warning"
+      },
+      "update": {
+        "test_case": "Test case has been updated, but has warning"
+      },
+      "common": {
+        "currentWorkspaceId": "You are already in this workspace"
+      }
+    },
+    "error": {
+      "delete": {
+        "projects": "Error while deleting project \"{{name}}\"",
+        "suite": "Error while deleting suite \"{{name}}\""
+      },
+      "edit": {
+        "projects": "Error while updating project \"{{name}}\""
+      },
+      "suite": {
+        "create": "Error while creating suite"
+      },
+      "update": {
+        "test_case": "Error while updating test case"
+      },
+      "create": {
+        "test_case": "Error while creating test case"
+      }
+    }
+  },
+  "project": {
+    "buttons": {
+      "delete": "Delete project",
+      "new_project": "New Project",
+      "edit_project": "Edit Project",
+      "create": "Save",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "messages": {
+      "created": "Project has been created",
+      "updated": "Project has been updated",
+      "deleted": "Project has been deleted",
+      "error": "Error"
+    },
+    "inputs": {
+      "max_parallels": {
+        "label": "Max parallels"
+      },
+      "name": {
+        "label": "Name",
+        "placeholder": "Example: My project"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "About your project"
+      }
+    }
+  },
+  "suite": {
+    "create": {
+      "title": "Create suite",
+      "cancel": "Cancel",
+      "submit": "Save"
+    },
+    "delete_content": "Are you sure you want to delete suite \"{{name}}\"?",
+    "menu": {
+      "create_subsuite": "Create subsuite",
+      "create_case": "Create case",
+      "delete": "Delete suite",
+      "edit": "Edit suite",
+      "generate": "Generate cases",
+      "clone": "Clone suite"
+    },
+    "inputs": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Example: Create account with valid random data"
+      },
+      "parent_suite": {
+        "label": "Parent suite",
+        "placeholder": "Select a parent suite"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Example: Create account with valid random data"
+      }
+    }
+  },
+  "auth": {
+    "dont_have_account": "Don't have an account? ",
+    "signup_button": "Sign up",
+    "signup": {
+      "title": "Get started",
+      "subtitle": "Do you already have an account?",
+      "condition_1": "8+ characters",
+      "condition_2": "uppercase and lowercase Latin letters",
+      "condition_3": "number",
+      "condition_4": "special characters (.,:?! *+% @ #)",
+      "sign_in": "Sign in"
+    },
+    "confirm_reset": {
+      "title": "Confirm reset password",
+      "new_password": "New password",
+      "placeholder": "Enter new password",
+      "submit": "Change password",
+      "no_token": "No token!",
+      "success": "Password changed!"
+    },
+    "reset": {
+      "title": "Reset password",
+      "resend": "Resend",
+      "resend_text": "The password reset link has been sent to {{email}}",
+      "step_1": "We will send a link to reset your password to your email"
+    },
+    "login": {
+      "title": "Sign in",
+      "forgot_pass": "Forgot password?"
+    },
+    "email": {
+      "placeholder": "user@company.com",
+      "label": "Work email"
+    },
+    "password": {
+      "label": "Password"
+    },
+    "confirm_password": {
+      "label": "Confirm password"
+    }
+  },
+  "variables": {
+    "select": {
+      "placeholder": "Select a set of variables",
+      "label": "Set of variables"
+    }
+  },
+  "menu": {
+    "side": {
+      "repository": "Repository",
+      "runs": "Test Runs",
+      "records": "Records",
+      "plans": "Plans",
+      "environments": "Environments",
+      "sign_out": "Sign Out",
+      "variables": "Variables",
+      "sharedSteps": "Shared Steps"
+    }
+  },
+  "records": {
+    "content": {
+      "title": "Screenshots"
+    },
+    "error": {
+      "title": "Generation error",
+      "subtitle": "Steps not generated",
+      "try_again": "Try again"
+    }
+  },
+  "projects_page": {
+    "index": {
+      "table": {
+        "columns": {
+          "max_streams": "Max streams",
+          "project_name": "Project Name",
+          "suits": "Suites",
+          "test_cases": "Test Cases",
+          "runs": "Runs"
+        }
+      }
+    }
+  },
+  "repository_page": {
+    "header": {
+      "cases": "cases",
+      "suites": "suites"
+    },
+    "body": {
+      "sidebar": {
+        "title": "Suites"
+      }
+    },
+    "toolbar": {
+      "addSuite": "Suite"
+    },
+    "content": {
+      "toolbar": {
+        "auth": "Authorization",
+        "case_btn": "Case From Records",
+        "runs": "Run"
+      }
+    }
+  },
+  "variablesPage": {
+    "validation": {
+      "required": "Field is required"
+    },
+    "title": "Variables",
+    "add": "Set of variables",
+    "list": {
+      "name": "Set name",
+      "description": "Description"
+    },
+    "delete": {
+      "title": "Delete set of variables",
+      "content": "Are you sure you want to delete the set {{name}} and {{count}}",
+      "ok": "Delete",
+      "cancel": "Cancel"
+    },
+    "details": {
+      "validation": {
+        "required": "Field is required",
+        "maxLength": "Max 255 characters",
+        "latinNoSpaces": "Only Latin characters, numbers and underscores are allowed"
+      },
+      "baseVariable": "Base variable",
+      "baseList": {
+        "currentDate": "Current date",
+        "currentTime": "Current time",
+        "dateTime": "Current date and time",
+        "timestamp": "Unix timestamp",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "tomorrow": "Tomorrow",
+        "startOfDay": "Start of day",
+        "endOfDay": "End of day"
+    },
+      "timeShifts": {
+        "title": "Time Shifts",
+        "addButton": "+ Add Shift",
+        "valuePlaceholder": "Value",
+        "typeLabel": "Unit",
+        "units": {
+          "seconds": "Seconds",
+          "minutes": "Minutes",
+          "hours": "Hours",
+          "days": "Days",
+          "months": "Months",
+          "years": "Years"
+        },
+        "validation": {
+          "valueRequired": "Please input value",
+          "typeRequired": "Please select type"
+        }
+      },
+      "selectTimezone": "Select timezone",
+      "selectFormat": "Select format",
+      "setBase": "Set base variable",
+      "useTimezone": "Use timezone",
+      "useFormat": "Use format",
+      "calculateOnce": "Calculate once (constant)",
+      "calculateOnceDescription": "If checked, the value is calculated once when the test case starts. Otherwise, it is recalculated before each step.",
+      "preview": "Preview",
+      "constantSuffix": " | Constant",
+      "customFormatPlaceholder": "HH:MM:SS...",
+      "baseVariablePlaceholder": "Select a base variable",
+      "add": "Variable",
+      "list": {
+        "name": "Variable Name",
+        "value": "Value",
+        "type": "Type",
+        "description": "Description"
+      },
+      "variableValueTypes": {
+        "constant": "Const",
+        "dynamic": "Dynamic"
+      },
+      "variableTypes": {
+        "simple": "Constant",
+        "time": "Time"
+      },
+      "update": {
+        "success": "Variable updated",
+        "title": "Edit variable",
+        "ok": "Save",
+        "cancel": "Cancel"
+      },
+      "delete": {
+        "title": "Delete variable",
+        "content": "Are you sure you want to delete the variable {{name}}?",
+        "ok": "Delete",
+        "cancel": "Cancel"
+      },
+      "create": {
+        "success": "New variable created",
+        "createAnother": "Create another",
+        "title": "Create variable",
+        "cancel": "Cancel",
+        "ok": "Create",
+        "inputs": {
+          "name": {
+            "title": "Variable name",
+            "placeholder": "Example, password"
+          },
+          "description": {
+            "title": "Description",
+            "placeholder": "Description of the variable purpose"
+          },
+          "type": {
+            "title": "Variable type",
+            "constant": "Constant",
+            "time": "Time",
+            "simple": "Simple"
+          },
+          "value": {
+            "title": "Value",
+            "placeholder": "Example, Pa$$w0rd"
+          }
+        }
+      }
+    },
+    "update": {
+      "title": "Edit a set of variables",
+      "success": "Variable kit updated",
+      "ok": "Save",
+      "cancel": "Cancel",
+      "inputs": {
+        "name": {
+          "title": "Name",
+          "placeholder": "Example: Production"
+        },
+        "description": {
+          "title": "Description",
+          "placeholder": "About set of variables"
+        },
+        "controls": {
+          "title": "Controls",
+          "placeholder": "Select"
+        }
+      }
+    },
+    "create": {
+      "success": "New variable kit created",
+      "title": "Create a set of variables",
+      "ok": "Create",
+      "cancel": "Cancel",
+      "inputs": {
+        "name": {
+          "title": "Name",
+          "placeholder": "Example: Production"
+        },
+        "description": {
+          "title": "Description",
+          "placeholder": "About set of variables"
+        },
+        "controls": {
+          "title": "Controls",
+          "placeholder": "Select"
+        }
+      }
+    }
+  },
+  "sharedStepsPage": {
+    "title": "Shared Steps",
+    "create": "Create Shared Step",
+    "list": {
+      "name": "Name",
+      "description": "Description"
+    },
+    "delete": {
+      "title": "Delete shared step",
+      "content": "Are you sure you want to delete the shared step \"{{name}}\"",
+      "ok": "Delete",
+      "cancel": "Cancel",
+      "warn": "This shared step is used in other test cases. Edit or remove it from the following before deleting:\n"
+    },
+    "form": {
+      "name": {
+        "label": "Name",
+        "placeholder": "Step name"
+      },
+      "description": {
+        "label": "Description",
+        "placeholder": "Step description"
+      }
+    }
+  },
+  "testCaseDrawer": {
+    "priority": "Priority",
+    "status": "Status",
+    "type": "Execution Type",
+    "variables": "Set of variables",
+    "url": "URL"
+  },
+  "runs_history": {
+    "view_video": "View video result",
+    "before": "Before",
+    "after": "After"
+  },
+  "create_case_records": {
+    "title": "Create case from Records",
+    "subtitle": "Select a video recording from the table to continue",
+    "button_ok": "Create",
+    "button_cancel": "Cancel"
+  },
+  "edit_test_case": {
+    "title": "Edit test case"
+  },
+  "create_test_case": {
+    "go_to_back": "Create test case",
+    "save": "Save",
+    "save_run": "Save and run",
+    "cancel": "Cancel",
+    "description": {
+      "label": "Description",
+      "placeholder": "About test case"
+    },
+    "input_name": {
+      "label": "Name",
+      "placeholder": "Example: Create account with valid random data"
+    },
+    "select_suite": {
+      "label": "Suite",
+      "options": [
+        {
+          "label": "Manual"
+        }
+      ]
+    },
+    "select_execution_type": {
+      "label": "Execution type",
+      "options": [
+        {
+          "label": "Manual"
+        },
+        {
+          "label": "Automated"
+        }
+      ]
+    },
+    "select_status": {
+      "label": "Status",
+      "options": [
+        {
+          "label": "Actual"
+        },
+        {
+          "label": "Draft"
+        },
+        {
+          "label": "Depricated"
+        }
+      ]
+    },
+    "menu": {
+      "add_step": "Step",
+      "clone_step": "Clone",
+      "delete_step": "Delete",
+      "add_result": "Expected result",
+      "add_shared_step": "Shared Step",
+      "add_api": "API Request"
+    },
+    "select_priority": {
+      "label": "Priority",
+      "options": [
+        {
+          "label": "Low"
+        },
+        {
+          "label": "Medium"
+        },
+        {
+          "label": "High"
+        }
+      ]
+    },
+    "input_url": {
+      "label": "URL",
+      "placeholder": "site.com"
+    },
+    "add_command": "Add step",
+    "add_expected_result": "Add expected result",
+    "add_step": "Add step",
+    "sep_steps": "Steps",
+    "before_test_steps": {
+      "init": "Before Case Steps",
+      "input": "",
+      "placeholder": "Commands..."
+    },
+    "test_cases_steps": {
+      "label": "Test Case Steps"
+    },
+    "placeholders": {
+      "api": "API request",
+      "command": "Commands...",
+      "action": "Commands...",
+      "expected_result": "Expected result..."
+    },
+    "api_placeholder": "API request",
+    "commands_placeholder": "Commands...",
+    "expected_result_placeholder": "Expected result...",
+    "after_test_steps": {
+      "label": "After Test Steps",
+      "placeholder": "Commands..."
+    }
+  },
+  "counts": {
+    "suits_zero": "No suits",
+    "suits": "{{count}} suit",
+    "suits_plural": "{{count}} suits",
+    "test_cases_zero": "No test cases",
+    "test_cases": "{{count}} test case",
+    "test_cases_plural": "{{count}} test cases",
+    "runs_zero": "No runs",
+    "runs": "{{count}} run",
+    "runs_plural": "{{count}} runs"
+  },
+  "test_case_run": {
+    "stopped": "Successful stopped"
+  },
+  "create_group": {
+    "name": "Name",
+    "description": "Description",
+    "environment": "Environment",
+    "host": "Host",
+    "deadline": "Deadline",
+    "parallel_exec": "Test Suite Parallel Execution",
+    "max_parallel": "Max parallel test cases",
+    "case_error": "Please select at least one case!"
+  },
+  "group_run": {
+    "list_dropdown": {
+      "statistics": "Statistics",
+      "clone": "Clone run",
+      "edit": "Edit run",
+      "delete": "Delete",
+      "delete_body": "Are you sure you want to delete the run?"
+    },
+    "select_all": "Select All",
+    "drawer": {
+      "stop": "Stop",
+      "attachments": "Attachments",
+      "result": "Result"
+    },
+    "execution": {
+      "suite_description": "Suite description",
+      "description": "Description",
+      "url": "URL",
+      "variables": "Set of variables"
+    },
+    "submit": {
+      "warning_disabled": "At least one key must be selected that is not in strict status"
+    },
+    "stop": {
+      "title": "Stop test run",
+      "body": "Are you sure that you want to stop the test run?",
+      "ok": "Stop",
+      "cancel": "Cancel"
+    },
+    "remove_case": {
+      "title": "Remove case",
+      "body": "Do you want to remove {{count}} test case from run?",
+      "ok": "Remove",
+      "cancel": "Cancel"
+    },
+    "add_result": {
+      "title": "Add result",
+      "subtitle": "You can add a comment and attach artifacts to the result",
+      "comment": "Comment",
+      "placeholder": "Add some additional information here",
+      "drop": "Click or drag file to this area to upload",
+      "ok": "Add result",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "select_status": "Select status!"
+    },
+    "sequential": "Sequential",
+    "parallel": "Parallel",
+    "completed": "completed",
+    "case_name": "Name",
+    "suite_path": "Suite",
+    "status": "Status",
+    "retest": "Retest",
+    "retest_locked_sequential": "Available only after the sequential section is complete or the run has stopped"
+  },
+  "message": {
+    "delete_project": "{{record}} has been deleted"
+  },
+  "confirm": {
+    "delete": {
+      "projects": "Are you sure you want to delete the project \"{{project_name}}\"? This action cannot be undone."
+    }
+  },
+  "run": {
+    "button_create": "Start New"
+  },
+  "environment_page": {
+    "title": "Environment",
+    "create": "New Environment",
+    "modal": {
+      "delete": {
+        "title": "Delete environment",
+        "content": "Are you sure that you want to delete the environment \"{{name}}\"?",
+        "buttons": {
+          "ok": "Delete",
+          "cancel": "Cancel"
+        }
+      }
+    }
+  },
+  "environment": {
+    "select": {
+      "label": "Environment",
+      "placeholder": "Select environment (optional)"
+    },
+    "retry": {
+      "title": "Retry Settings",
+      "enable": {
+        "label": "Enable element search retries",
+        "description": "If element is not found immediately, retry with new screenshots"
+      },
+      "error": {
+        "slowTestCase": "⚠\uFE0F Large timeout may slow down test execution",
+        "maxTimeout": "Timeout cannot exceed {{max}} seconds. This limit ensures reasonable test execution time"
+      },
+      "timeout": {
+        "label": "Timeout (seconds)",
+        "placeholder": "30",
+        "description": "Maximum wait time for element to appear (1-60 seconds). Recommended: 30 seconds"
+      }
+    },
+    "name": {
+      "label": "Name",
+      "placeholder": "Example Production"
+    },
+    "description": {
+      "label": "Description",
+      "placeholder": "About your environment"
+    },
+    "browser": {
+      "label": "Browser",
+      "placeholder": "Select a browser"
+    },
+    "operationSystem": {
+      "label": "Operating System",
+      "placeholder": "Select an operating system"
+    },
+    "width": {
+      "label": "Width",
+      "placeholder": "1920"
+    },
+    "height": {
+      "label": "Height",
+      "placeholder": "1080"
+    },
+    "submit": "Save",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "streams": {
+      "input_count": "Input stream count"
+    },
+    "input": {
+      "cannotBeZero": "Cannot be zero",
+      "required": "This field is required",
+      "url": "Please enter a valid URL",
+      "email": "Please enter a valid Email",
+      "inn": "Input 10 or 12 digits",
+      "kpp": "Input 9 digits"
+    }
+  },
+  "edit_group_run": {
+    "title": "Edit group run"
+  },
+  "create_run": {
+    "modal": {
+      "title": "Start new test run",
+      "title_select": "Select test cases"
+    },
+    "buttons": {
+      "ok": "Create run",
+      "cancel": "Cancel"
+    },
+    "size_testcase": "{{count}} test case is selected for the run",
+    "size_suite": "{{count}} suites is selected for the run",
+    "select_cases": "Select Cases",
+    "case_selected": "{{count}} case selected",
+    "no_selected_item": "No selected items",
+    "cancel_select_cases": "Cancel",
+    "done_select_cases": "Done",
+    "execution_modes": "Execution Modes",
+    "selected_cases": "Selected Cases",
+    "parallel_cases": "Parallel Cases",
+    "threads_label": "Number of parallel threads",
+    "selected_parallel_cases": "Selected {{count}} parallel case(s)",
+    "add_parallel_cases": "Add Parallel Cases",
+    "clear_parallel_cases": "Clear Parallel Cases",
+    "sequential_cases": "Sequential Cases",
+    "no_sequential_cases": "No sequential cases added",
+    "add_sequential_cases": "Add Sequential Cases",
+    "selected_sequential_cases": "Selected {{count}} sequential case(s)"
+  },
+  "show_record": {
+    "create_case": "Create case",
+    "cancel": "Cancel",
+    "action_type": "Action Type: \"{{name}}\"",
+    "field": "field: \"{{name}}\"",
+    "screenshots": "Screenshots"
+  },
+  "running_page": {
+    "sharedStepEditModal": {
+      "title": "Only First Repeated Shared Step Will Be Saved",
+      "description": "If the same Shared Step is used multiple times in this test case, only changes to the first occurrence will be saved. Subsequent occurrences will be ignored.\n\nAll regular steps and non-repeated Shared Steps will be saved normally."
+    },
+    "apiStep": {
+      "statusCode": "API Status Code",
+      "validations": "API Validations",
+      "processedCommand": "API Processed Command",
+      "setVariables": "Set Variables",
+      "apiResponse": "API Response",
+      "apiRequest": "API Request body",
+      "variablesStore": "Variables Storage"
+    },
+    "prompt": "AI Processed Command",
+    "thoughts": "Reflection Thoughts",
+    "action_plan": "Action Plan",
+    "expected": "AI Processed Expect",
+    "view_video": "View video result",
+    "buttons": {
+      "logs": "Logs",
+      "trace": "Trace",
+      "stop": "Stop",
+      "before": "Before",
+      "after": "After"
+    },
+    "total_time": "Total time",
+    "click_area": {
+      "highlight_color": "Highlight color",
+      "request_options": "Request Options",
+      "thinking_mode": "Thinking mode",
+      "copy_description": "Copy description",
+      "define_element": "Define Element",
+      "get_description": "Get description",
+      "clear_selection": "Clear selection",
+      "cancel": "Cancel",
+      "element_description": "Element description",
+      "failed_to_get_description": "Failed to get description from model",
+      "description_copied": "Description copied to clipboard"
+    }
+  },
+  "debug_mode": {
+    "no_screenshots_error": "At least one screenshot must be available for editing",
+    "timeout_error": "Request timed out (90s). Please try again",
+    "reflection_success": "Reflection check completed successfully",
+    "check_in_progress": "Check is already in progress. Please wait for completion",
+    "check_cancelled": "Check cancelled",
+    "coordinates_success": "Coordinates retrieved successfully",
+    "reflection_failed": "Reflection check failed"
+  }
+}

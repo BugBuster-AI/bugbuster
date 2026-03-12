@@ -1,0 +1,13 @@
+.methodSelect {
+  max-width: 100px;
+
+  :global(.ant-select-selector) {
+    padding-left: 0 !important;
+  }
+
+  :global(.ant-select-selection-item) {
+    width: 100px;
+    color: var(--selection-color);
+    font-weight: 700
+  }
+}

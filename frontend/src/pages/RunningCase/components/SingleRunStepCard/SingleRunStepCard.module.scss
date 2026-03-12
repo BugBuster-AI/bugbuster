@@ -1,0 +1,37 @@
+.title {
+  & > span[data-variable] {
+    color: rgba(22, 119, 255, 1)
+  }
+}
+
+
+.container {
+  position: relative;
+}
+
+.contextIconWrapper {
+  position: absolute;
+  left: 16px;
+  bottom: 24px;
+  width: 20px;
+  height: 20px;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.contextTooltipRoot {
+  :global(.ant-tooltip-inner) {
+    width: fit-content;
+    color: white;
+  }
+}
+
+
+.iconPlaceholder {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+}

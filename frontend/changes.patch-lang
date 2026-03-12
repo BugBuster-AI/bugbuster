@@ -1,0 +1,86 @@
+diff --git a/src/locales/en/translation.json b/src/locales/en/translation.json
+index b883c5a..e0264d7 100644
+--- a/src/locales/en/translation.json
++++ b/src/locales/en/translation.json
+@@ -1,7 +1,23 @@
+ {
+   "authPage": {
+-    "title": "Тест-кейсы, которые\nработают сами",
+-    "description": "Простая автоматизация тестирования на естественном языке.\n Без сложной инфраструктуры и кода"
++    "ru": {
++      "title": "Тест-кейсы, которые\nработают сами",
++      "description": "Простая автоматизация тестирования на естественном языке.\n Без сложной инфраструктуры и кода"
++    },
++    "ai": {
++      "title": "Self-Executing Test Cases\n",
++      "description": "Natural language test automation: simple and code-free."
++    }
++  },
++  "mobilePlaceholder": {
++    "ru": "Извините, эта страница доступна только для десктопа",
++    "ai": "Sorry, this page is only available on desktop"
++  },
++  "streams": {
++    "workspace": "Workspace streams: {{info}}",
++    "project": "Project streams: {{info}}",
++    "run": "Streams usage: {{info}}",
++    "free_streams": "Free streams:"
+   },
+   "header": {
+     "projects": "Projects",
+@@ -87,6 +103,15 @@
+     }
+   },
+   "grouped_run": {
++    "table": {
++      "name": "Name",
++      "streams": "Streams",
++      "status": "Status",
++      "deadline": "Deadline",
++      "author": "Author",
++      "time": "Time",
++      "stats": "Test run stats"
++    },
+     "buttons": {
+       "run": "Run",
+       "stop": "Stop",
+@@ -230,6 +255,9 @@
+       "error": "Error"
+     },
+     "inputs": {
++      "max_parallels": {
++        "label": "Max parallels"
++      },
+       "name": {
+         "label": "Name",
+         "placeholder": "Example: My project"
+@@ -282,10 +310,19 @@
+       "condition_4": "special characters (.,:?! *+% @ #)",
+       "sign_in": "Sign in"
+     },
++    "confirm_reset": {
++      "title": "Confirm reset password",
++      "new_password": "New password",
++      "placeholder": "Enter new password",
++      "submit": "Change password",
++      "no_token": "No token!",
++      "success": "Password changed!"
++    },
+     "reset": {
+       "title": "Reset password",
+-      "step_1": "We will send a link to reset your password to your email",
+-      "step_2": "The password reset link has been sent to"
++      "resend": "Resend",
++      "resend_text": "The password reset link has been sent to {{email}}",
++      "step_1": "We will send a link to reset your password to your email"
+     },
+     "login": {
+       "title": "Sign in",
+@@ -475,6 +512,7 @@
+     "host": "Host",
+     "deadline": "Deadline",
+     "parallel_exec": "Test Suite Parallel Execution",
++    "max_parallel": "Max parallel test cases",
+     "case_error": "Please select at least one case!"
+   },
+   "group_run": {

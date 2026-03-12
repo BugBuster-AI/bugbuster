@@ -1,0 +1,16 @@
+{
+  "name": "trace-viewer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build:app": "vite build",
+    "build:sw": "vite build -c vite.sw.config.ts",
+    "build": "npm run build:sw && npm run build:app"
+  },
+  "dependencies": {
+    "yaml": "^2.6.0",
+    "markdown-to-jsx": "^7.7.3"
+  }
+}

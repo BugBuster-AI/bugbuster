@@ -1,0 +1,38 @@
+
+[
+  {
+    "variable_name": "now_utc4470",
+    "variable_config": {
+      "type": "time",
+      "base": "currentTime",
+      "utc_offset": "-12:45",
+      "shifts": [
+        {
+          "value": -1,
+          "unit": "d"
+        },
+        {
+          "value": 2,
+          "unit": "h"
+        }
+      ],
+      "format": "YYYY-MM-DD HH:mm",
+      "is_const": false
+    },
+    "variable_description": null,
+    "variable_details_id": "8a0219c1-fd7c-433f-a404-fa9a5514dace",
+    "variables_kit_id": "bb51cc89-a9cb-40cc-bbc5-6c28820c3ccb",
+    "computed_value": "2025-11-26 20:27"
+  },
+  {
+    "variable_name": "login",
+    "variable_config": {
+      "type": "simple",
+      "value": "string"
+    },
+    "variable_description": null,
+    "variable_details_id": "1dab25a7-a105-4796-8130-82a68526abcb",
+    "variables_kit_id": "bb51cc89-a9cb-40cc-bbc5-6c28820c3ccb",
+    "computed_value": "string"
+  }
+]

@@ -1,0 +1,20 @@
+.highlighter {
+
+  span {
+    overflow-wrap: anywhere;
+  }
+}
+
+.processedCommand {
+  max-height: 10dvh;
+  overflow-y: auto;
+}
+
+.apiResponse {
+  max-height: 30dvh;
+  overflow-y: auto;
+}
+
+.highlighterWrapper {
+  width: 100%;
+}

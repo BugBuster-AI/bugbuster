@@ -1,0 +1,14 @@
+.vscode
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.bak
+/venv
+/*.env
+dock.txt
+text.txt
+run.sh
+test.json
+test.py
+LICENSE.json

@@ -1,0 +1,17 @@
+.textarea {
+  flex: 1;
+
+  :global(.public-DraftEditor-content) {
+    overflow-wrap: anywhere !important;
+
+  }
+
+  &.disabled {
+    cursor: pointer !important;
+  }
+}
+
+:global(.ant-form-item-has-error .textarea-with-variables) {
+  border-color: #ff4d4f !important;
+  box-shadow: 0 0 0 2px rgba(255, 38, 5, 0.06) !important;
+}

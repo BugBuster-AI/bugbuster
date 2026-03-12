@@ -1,0 +1,13 @@
+.selectWrapper {
+  :global(.ant-select-selector) {
+    padding-left: 0 !important;
+  }
+
+  //:global(.ant-select-selection-item) {
+  //  text-overflow: initial;
+  //  white-space: normal;
+  //  //display: contents !important;
+  //  margin-bottom: 1rem;
+  //  line-height: initial !important;
+  //}
+}

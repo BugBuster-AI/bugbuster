@@ -1,0 +1,300 @@
+# Test Code Generation Rules - Playwright
+
+## Your Responsibility
+
+When generating test automation code, you must produce high-quality, maintainable Playwright code that accurately represents the browser actions you performed. The code must follow best practices and use proper locator strategies.
+
+## LOCATOR CONVERSION RULES (APPLY IN ORDER)
+
+When you receive a CSS selector or XPath from browser tools, convert it to the appropriate Playwright locator using this priority order:
+
+### Rule 1: INPUT with placeholder attribute
+```python
+# From CSS: input[placeholder='Email']
+# From XPath: //input[@placeholder='Email']
+# Convert to:
+page.get_by_placeholder('Email')
+```
+
+### Rule 2: INPUT with associated label
+```python
+# From HTML: <label for="email">Email Address</label><input id="email">
+# From XPath: //label[text()='Email Address']/following::input
+# Convert to:
+page.get_by_label('Email Address')
+```
+
+### Rule 3: Element with visible text ONLY
+**Only if the original locator was text-based, not attribute-based:**
+```python
+# From XPath: //button[text()='Submit']
+# From CSS: button:contains('Submit')
+# Convert to:
+page.get_by_text('Submit')  # for exact match
+page.get_by_text('Submit', exact=False)  # for partial match
+```
+
+### Rule 4: IMG with alt text
+```python
+# From CSS: img[alt='Company Logo']
+# From XPath: //img[@alt='Company Logo']
+# Convert to:
+page.get_by_alt_text('Company Logo')
+```
+
+### Rule 5: Elements with CUSTOM CLASSES (IMPORTANT!)
+**If the locator contains a custom/unique class, YOU MUST USE IT:**
+```python
+# From CSS: .custom-button-class
+# From CSS: button.special-submit-btn
+# From XPath: //button[contains(@class, 'unique-class-name')]
+# Convert to:
+page.locator('.custom-button-class')
+page.locator('button.special-submit-btn')
+page.locator('.unique-class-name')
+
+# DO NOT convert these to get_by_role() or get_by_text()
+# Custom classes are intentional and should be preserved!
+```
+
+### Rule 6: No conversion possible
+**Use page.locator() with the EXACT selector received:**
+```python
+# From XPath: //a[@href="/exact-url"]
+page.locator('//a[@href="/exact-url"]')
+
+# From CSS: button.class1.class2[data-id="123"]
+page.locator('button.class1.class2[data-id="123"]')
+
+# From CSS: div > span:nth-child(2)
+page.locator('div > span:nth-child(2)')
+```
+
+## PLAYWRIGHT BEST PRACTICES
+
+### 1. Web-First Assertions with Auto-Waiting
+Playwright automatically waits for conditions - use this!
+
+```python
+# ✅ Good - auto-waits for visibility
+await expect(page.get_by_text('Success')).to_be_visible()
+
+# ✅ Good - auto-waits for element to have text
+await expect(page.locator('.message')).to_have_text('Welcome')
+
+# ❌ Avoid - manual waiting
+await page.wait_for_timeout(2000)
+if page.locator('.message').is_visible():
+    pass
+```
+
+### 2. Chain Locators to Narrow Scope
+```python
+# ✅ Good - narrow down scope progressively
+await page.get_by_role('listitem').filter(has_text='Product 1').click()
+
+# ✅ Good - find within context
+product_card = page.locator('.product-card').filter(has_text='iPhone')
+await product_card.get_by_role('button', name='Add to Cart').click()
+
+# ❌ Avoid - overly broad selectors
+await page.locator('button').nth(5).click()  # fragile!
+```
+
+### 3. Use Proper Assertions
+```python
+# ✅ Good - specific assertions
+await expect(page.locator('#username')).to_be_visible()
+await expect(page.locator('#username')).to_be_enabled()
+await expect(page.locator('#username')).to_have_value('john@example.com')
+
+# ✅ Good - wait for condition
+await expect(page.locator('.loading')).to_be_hidden()
+
+# ❌ Avoid - checking state without waiting
+is_visible = await page.locator('#username').is_visible()
+assert is_visible  # No auto-waiting!
+```
+
+### 4. Test User-Visible Behavior
+```python
+# ✅ Good - test what users see and do
+await page.get_by_role('button', name='Login').click()
+await expect(page.get_by_text('Welcome back!')).to_be_visible()
+
+# ❌ Avoid - testing implementation details
+await page.locator('#btn-123-xyz').click()
+assert await page.evaluate('window.userData.isLoggedIn') == True
+```
+
+### 5. Async/Await Patterns
+```python
+# ✅ Good - proper async/await
+async def test_login(page):
+    await page.goto('https://example.com/login')
+    await page.get_by_label('Email').fill('user@example.com')
+    await page.get_by_label('Password').fill('password123')
+    await page.get_by_role('button', name='Sign in').click()
+    await expect(page).to_have_url(re.compile(r'.*/dashboard'))
+
+# ❌ Avoid - missing await
+async def test_login_bad(page):
+    page.goto('https://example.com/login')  # Missing await!
+    page.get_by_label('Email').fill('user@example.com')  # Missing await!
+```
+
+### 6. Meaningful Comments
+```python
+# ✅ Good - explains WHY, not just WHAT
+# Wait for the API call to complete before checking results
+await page.wait_for_response('**/api/users')
+await expect(page.locator('.user-list')).to_be_visible()
+
+# User must accept terms before proceeding
+await page.get_by_label('I accept the terms').check()
+
+# ❌ Avoid - obvious comments
+# Click the button
+await page.locator('button').click()
+```
+
+## Code Structure Template
+
+```python
+from playwright.sync_api import sync_playwright, expect
+import re
+
+
+def test_example_flow():
+    """
+    Test Case: [Brief description]
+    This test verifies [what behavior/functionality]
+    """
+    with sync_playwright() as p:
+        # Launch browser
+        browser = p.chromium.launch(headless=False)
+        page = browser.new_page()
+
+        try:
+            # Step 1: [Description of what this step does]
+            await page.goto('https://example.com')
+
+            # Step 2: [Description]
+            await page.get_by_label('Email').fill('user@example.com')
+            await page.get_by_label('Password').fill('password123')
+
+            # Step 3: [Description]
+            await page.get_by_role('button', name='Login').click()
+
+            # Verify: Check successful login
+            await expect(page.get_by_text('Welcome')).to_be_visible()
+            await expect(page).to_have_url(re.compile(r'.*/dashboard'))
+
+        finally:
+            # Cleanup
+            browser.close()
+
+
+if __name__ == '__main__':
+    test_example_flow()
+```
+
+## Locator Conversion - YOU MUST EXPLAIN
+
+When generating code, you MUST include a comment explaining your locator choice:
+
+```python
+# Locator conversion: //input[@placeholder='Search']
+# Converted to get_by_placeholder() - Rule 1 (input with placeholder)
+await page.get_by_placeholder('Search').fill('test query')
+
+# Locator conversion: .custom-search-button
+# Using page.locator() - Rule 5 (custom class must be preserved)
+await page.locator('.custom-search-button').click()
+
+# Locator conversion: //button[text()='Submit Form']
+# Converted to get_by_text() - Rule 3 (text-based locator)
+await page.get_by_text('Submit Form').click()
+```
+
+## Common Patterns
+
+### Form Filling
+```python
+# Fill form fields
+await page.get_by_label('First Name').fill('John')
+await page.get_by_label('Last Name').fill('Doe')
+await page.get_by_label('Email').fill('john.doe@example.com')
+
+# Select from dropdown
+await page.get_by_label('Country').select_option('USA')
+
+# Check checkbox
+await page.get_by_label('Subscribe to newsletter').check()
+
+# Submit
+await page.get_by_role('button', name='Submit').click()
+```
+
+### Navigation and Waiting
+```python
+# Navigate
+await page.goto('https://example.com/products')
+
+# Wait for URL
+await expect(page).to_have_url(re.compile(r'.*/products'))
+
+# Wait for element
+await expect(page.locator('.product-list')).to_be_visible()
+
+# Wait for network
+await page.wait_for_response('**/api/products')
+```
+
+### Assertions
+```python
+# Visibility
+await expect(page.get_by_text('Success!')).to_be_visible()
+await expect(page.locator('.error')).to_be_hidden()
+
+# Text content
+await expect(page.locator('.title')).to_have_text('Welcome')
+await expect(page.locator('.message')).to_contain_text('successfully')
+
+# Attributes
+await expect(page.locator('#submit-btn')).to_be_enabled()
+await expect(page.locator('#terms')).to_be_checked()
+await expect(page.locator('a')).to_have_attribute('href', '/home')
+
+# Count
+await expect(page.locator('.item')).to_have_count(5)
+```
+
+## CRITICAL REMINDERS
+
+### ⚠️ NEVER FORGET:
+
+1. **Use the exact locator provided by browser tools** - only convert following the rules above
+2. **Preserve custom classes** - they are intentional and important
+3. **Explain your conversion** - always comment why you chose a particular locator
+4. **Don't invent locators** - if tools gave you `.btn-custom`, don't change it to `button`
+5. **Follow the rule priority** - apply rules in order (1 → 6)
+6. **Include assertions** - every action should have a verification
+7. **Use async/await properly** - Playwright is async, don't forget `await`
+8. **Add meaningful comments** - explain the purpose, not just the action
+
+## Code Quality Checklist
+
+Before finalizing code, verify:
+- [ ] All locators follow conversion rules
+- [ ] Custom classes are preserved
+- [ ] Async/await used correctly
+- [ ] Assertions are present for verifications
+- [ ] Comments explain the purpose
+- [ ] Code is properly structured
+- [ ] No hardcoded waits (sleep/timeout)
+- [ ] Locator conversions are documented
+
+---
+
+Your generated code should be production-ready, maintainable, and follow Playwright best practices. Quality over speed!

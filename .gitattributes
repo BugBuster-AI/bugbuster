@@ -1,0 +1,2 @@
+infra/playwright-custom/playwright/driver/node filter=lfs diff=lfs merge=lfs -text
+playwright/driver/node.exe filter=lfs diff=lfs merge=lfs -text

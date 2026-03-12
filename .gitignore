@@ -1,0 +1,19 @@
+.vscode
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+*.bak
+/venv
+/*.env
+*.env
+dock.txt
+text.txt
+run.sh
+run.ps1
+test.json
+test.py
+LICENSE.json
+
+# Logs and generated artifacts
+clicker/code_service/logs/

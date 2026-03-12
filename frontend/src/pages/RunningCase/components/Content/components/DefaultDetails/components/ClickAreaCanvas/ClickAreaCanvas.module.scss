@@ -1,0 +1,41 @@
+.canvasWrapper {
+    position: relative;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    padding-bottom: 32px;
+
+    canvas {
+        display: block;
+        width: 100%;
+        cursor: crosshair;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        height: auto;
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+
+        &.loading {
+            display: none;
+        }
+
+        &.dragging {
+            cursor: crosshair;
+        }
+
+        &.disable {
+            cursor: default;
+        }
+    }
+
+}
+
+.loader {
+    height: 200px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    justify-items: center;
+    align-items: center;
+}
