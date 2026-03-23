@@ -42,7 +42,7 @@
 
 ### Prerequisites: Git LFS
 
-This repository uses **Git LFS** for Playwright binaries (`playwright/driver/node.exe` and related files). Without Git LFS, these files may be missing and related functionality will not work.
+This repository uses **Git LFS** for Playwright binaries and related files. Without Git LFS, these files may be missing and related functionality will not work.
 
 <details>
 <summary><b>1. Install Git LFS (one time per machine)</b></summary>
