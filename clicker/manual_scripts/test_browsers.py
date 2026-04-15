@@ -298,36 +298,32 @@ async def main(browser_type: str = "firefox", url: str = "https://google.com"):
     if browser_type == 'firefox':
         browser = await p.firefox.launch(headless=False,
                                          firefox_user_prefs={"dom.webdriver.enabled": False})
-        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0"
+        user_agent = None
     elif browser_type == 'chrome':
         browser = await p.chromium.launch(channel='chrome',
                                             headless=False,
                                             args=[
                                                 "--disable-blink-features=AutomationControlled",
                                                 "--disable-web-security",
-   
-
                                             ])
         user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.54 Safari/537.36"
 
+    extra_headers = {
+        "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Accept-Encoding": "gzip, deflate, br, zstd",
+        "Upgrade-Insecure-Requests": "1",
+        "Cache-Control": "max-age=0",
+    }
+    if user_agent:
+        extra_headers["User-Agent"] = user_agent
 
     context = await browser.new_context(
         viewport={"width": 1024, "height": 768},
         locale="en-US",
         bypass_csp=True,
         ignore_https_errors=True,
-        extra_http_headers={
-            "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5",
-            "Accept-Language": "en-US,en;q=0.9",
-            "Accept-Encoding": "gzip, deflate, br, zstd",
-            "Upgrade-Insecure-Requests": "1",
-            "User-Agent": user_agent,
-            # "Sec-Ch-Ua": '"Google Chrome";v="127", "Chromium";v="127", "Not.A/Brand";v="24"',
-            # "Sec-Ch-Ua-Mobile": "?0",
-
-            "Cache-Control": "max-age=0"
-
-        }
+        extra_http_headers=extra_headers,
     )
 
     tab_manager = TabManager(context)

@@ -11,6 +11,10 @@ from subprocess import CalledProcessError, TimeoutExpired
 from core.config import logger
 from core.utils import upload_bytes_buffer_to_minio
 
+# Согласовано с infra/video-generate-service/workers/worker_generate_video.py:
+# кадр screencast после after.endTime даёт неположительную дельту — задаём хвост, не отбрасываем кадр.
+LAST_SCREENCAST_FRAME_TAIL_SEC = 0.3
+
 
 def extract_zip_to_dir(zip_file_path, extract_to_path):
     with zipfile.ZipFile(zip_file_path, 'r') as z:
@@ -67,8 +71,8 @@ def find_matching_screenshots(log_data):
                         duration = (matching_screenshots[j + 1]['timestamp'] - screenshot['timestamp']) / 1000
                     else:
                         duration = (end_time - screenshot['timestamp']) / 1000
-                        if duration < 0:
-                            continue  # пропускаем самую последнюю картинку с неизвестным dur
+                        if duration <= 0:
+                            duration = LAST_SCREENCAST_FRAME_TAIL_SEC
 
                     duration_rounded = round(duration, 6)
                     if duration_rounded < 0.001:  # Минимальная длительность 1ms

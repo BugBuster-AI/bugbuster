@@ -7,15 +7,20 @@ import { getRunInfo } from '@Entities/runs/utils/runInfo.ts';
 import { useTestCaseStore } from '@Entities/test-case';
 import { RunStepsView } from '@Entities/test-case/components/StepsView/RunStepsView.tsx';
 import { useLocalRunStepsData } from '@Entities/test-case/hooks/useLocalStepData.ts';
+import { ETestCaseType } from '@Entities/test-case/models';
+import { ErrorBoundary } from '@Common/components/ErrorBoundary';
+import { CodegenExecutionViewSwitch, TCodegenExecutionView } from '@Features/test-case/playwright-codegen/CodegenExecutionViewSwitch.tsx';
+import { PlaywrightCodegenPanel } from '@Features/test-case/playwright-codegen/PlaywrightCodegenPanel.tsx';
 import { useQuery } from '@tanstack/react-query';
 import { Divider, Flex, Skeleton, Typography } from 'antd';
 import get from 'lodash/get';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export const FinishedCase = () => {
     const testCase = useTestCaseStore((state) => state.currentCase)
     const { t } = useTranslation()
+    const [executionView, setExecutionView] = useState<TCodegenExecutionView>('run')
     const { data, isLoading, error } = useQuery(runsQueries.runningCase(testCase?.actual_run_id!!, {
         refetchInterval: (query) => {
             const data = get(query, 'state.data', null)
@@ -38,13 +43,22 @@ export const FinishedCase = () => {
 
     const { isGeneratingVideo, hasVideo } = useMemo(() => getRunInfo(data), [data])
 
-    const { steps: localSteps } = useLocalRunStepsData({ run: data })
+    const { steps: localStepsGrouped } = useLocalRunStepsData({ run: data })
 
+    const showCodegen = testCase?.type === ETestCaseType.automated
+        && Boolean(data?.run_id) && Boolean(testCase?.case_id)
 
     if (isLoading) return <Skeleton paragraph={ { width: '100%', rows: 3 } } title={ false }/>
 
     return (
-        <Flex vertical>
+        <Flex
+            style={ {
+                flex: 1,
+                height: '100%',
+                minHeight: 0,
+            } }
+            vertical
+        >
 
             <Flex style={ { marginBottom: '12px' } } vertical>
 
@@ -56,17 +70,48 @@ export const FinishedCase = () => {
                 {(data) &&
                     <ResultCard
                         result={ data?.run_summary || undefined }
+                        resultFormat="ansi"
                         status={ testCase?.actual_status! }
                         time={ data?.complete_time }
                     />}
             </Flex>
 
-            <RunStepsView
-                attachments={ data?.attachments }
-                errorMessage={ errorMessage }
-                steps={ localSteps }
-                grouping
-            />
+            {showCodegen && testCase?.case_id && data?.run_id && (
+                <CodegenExecutionViewSwitch
+                    onChange={ setExecutionView }
+                    value={ executionView }
+                />
+            )}
+
+            {showCodegen && executionView === 'codegen' && testCase?.case_id && data?.run_id
+                ? (
+                    <div
+                        style={ {
+                            display: 'flex',
+                            flex: 1,
+                            flexDirection: 'column',
+                            minHeight: 0,
+                            overflow: 'auto',
+                        } }
+                    >
+                        <ErrorBoundary>
+                            <PlaywrightCodegenPanel
+                                caseId={ String(testCase.case_id) }
+                                runId={ data.run_id }
+                                testCase={ testCase }
+                                embedded
+                            />
+                        </ErrorBoundary>
+                    </div>
+                )
+                : (
+                    <RunStepsView
+                        attachments={ data?.attachments }
+                        errorMessage={ errorMessage }
+                        steps={ localStepsGrouped }
+                        grouping
+                    />
+                )}
 
             <Flex style={ { marginTop: 8 } }>
                 {isGeneratingVideo && <VideoLoader/>}

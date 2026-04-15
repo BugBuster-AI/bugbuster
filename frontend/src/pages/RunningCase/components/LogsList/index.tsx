@@ -270,6 +270,7 @@ export const LogsList = () => {
 
                         <ResultCard
                             result={ run?.run_summary }
+                            resultFormat="ansi"
                             status={ run.status }
                             time={ run?.complete_time }
                         />

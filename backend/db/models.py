@@ -5,7 +5,7 @@ from sqlalchemy.sql import text
 from sqlalchemy import (ARRAY, FLOAT, JSON, Boolean, Column, DateTime,
                         ForeignKey, Index, Integer, Numeric, String, Text,
                         UniqueConstraint, Sequence, desc)
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.ext.mutable import MutableList
 from sqlalchemy.orm import backref, declarative_base, relationship
@@ -335,6 +335,9 @@ class Case(Base):
     position = Column(Integer, nullable=False, default=0)
     shared_steps = Column(JSON, default=list, nullable=True)
     environment_id = Column(UUID(as_uuid=True), nullable=True)
+    codegen_regeneration_required = Column(Boolean, nullable=False, default=False, server_default=text("false"))
+    codegen_regeneration_since = Column(DateTime(timezone=True), nullable=True)
+    codegen_first_requested_at = Column(DateTime(timezone=True), nullable=True)
 
     suite = relationship('Suite', back_populates='cases')
     shared_steps_links = relationship(
@@ -524,6 +527,12 @@ class RunCase(Base):
     execution_mode = Column(String, nullable=True)   # 'sequential' | 'parallel'
     execution_order = Column(Integer, nullable=True)  # only for sequential
     case_type_in_run = Column(String, nullable=False, default='automated')
+    execution_engine = Column(String(32), nullable=False, default='vlm', server_default=text("'vlm'"))
+    playwright_codegen_artifact_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("case_playwright_codegen.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     # case = relationship('Case', back_populates='run_cases')
 
@@ -550,6 +559,28 @@ class RunCase(Base):
         # Index('ix_run_cases_case_type', text("(current_case_version->>'case_type_in_run')"))
         Index('idx_run_cases_group_mode_status_ws', 'group_run_id', 'execution_mode', 'status', 'workspace_id'),
         Index('idx_run_cases_group_mode_order_created', 'group_run_id', 'execution_mode', 'execution_order', 'created_at')
+    )
+
+
+class CasePlaywrightCodegen(Base):
+    __tablename__ = "case_playwright_codegen"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    case_id = Column(UUID(as_uuid=True), ForeignKey("cases.case_id", ondelete="CASCADE"), nullable=False)
+    # RESTRICT: if a run_case is ever deleted, any referencing codegen artifact
+    # must be removed first; see invalidate_codegen_artifact() or
+    # delete_playwright_codegen_artifact() for the cleanup path.
+    source_run_id = Column(UUID(as_uuid=True), ForeignKey("run_cases.run_id", ondelete="RESTRICT"), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), nullable=True, onupdate=func.now())
+    source_code = Column(Text, nullable=False)
+    step_spans = Column(JSONB, nullable=False)
+    steps_content_hash = Column(Text, nullable=False)
+    generator_meta = Column(JSONB, nullable=True)
+    is_current = Column(Boolean, nullable=False, default=True, server_default=text("true"))
+
+    __table_args__ = (
+        Index("ix_case_playwright_codegen_case_id", "case_id"),
     )
 
 

@@ -9,6 +9,7 @@ import isBoolean from 'lodash/isBoolean';
 import map from 'lodash/map';
 import reject from 'lodash/reject';
 import size from 'lodash/size';
+import { TCodegenExecutionView } from '@Features/test-case/playwright-codegen/CodegenExecutionViewSwitch';
 import { devtools } from 'zustand/middleware';
 import { create } from 'zustand/react';
 import { StateCreator } from 'zustand/vanilla';
@@ -47,6 +48,9 @@ interface IState {
 
     // сохраненный список переменных
     variablesList: Record<string, string>
+
+    /** Основная область /running: просмотр шагов или панель генерации Playwright */
+    executionPanelView: TCodegenExecutionView
 }
 
 interface IAction {
@@ -69,6 +73,8 @@ interface IAction {
 
     updateEditingStep: (stepUUID: string, step: Partial<IRunStep>) => void
     setVariablesList: (variables?: Record<string, string>) => void
+
+    setExecutionPanelView: (view: TCodegenExecutionView) => void
     
     // вставить шаг в ран
     insertStepAfter: (stepUUID: string, stepType: string) => void
@@ -93,7 +99,8 @@ const initialState: IState = {
 
     editingSteps: [],
     logs: [],
-    variablesList: {}
+    variablesList: {},
+    executionPanelView: 'run',
 }
 
 const slice: StateCreator<TRunningStore, [['zustand/devtools', never]], []> = (set, get) => ({
@@ -321,13 +328,16 @@ const slice: StateCreator<TRunningStore, [['zustand/devtools', never]], []> = (s
 
         set({ variablesList: { ...prev, ...variables } })
     },
+    setExecutionPanelView: (view) => {
+        set({ executionPanelView: view })
+    },
     setIsEdited: (isEdited) => {
         set({ isEdited })
     },
     setRefetchingState: (data) => {
         const refetchingState = {
             isRefetchingVideo: !isBoolean(data.video) ? get().isRefetchingVideo : data.video,
-            isRefetchingSteps: !isBoolean(data.steps) ? get().isRefetchingVideo : data.steps
+            isRefetchingSteps: !isBoolean(data.steps) ? get().isRefetchingSteps : data.steps
         }
 
         set({ ...refetchingState })
@@ -368,9 +378,7 @@ const slice: StateCreator<TRunningStore, [['zustand/devtools', never]], []> = (s
         }
 
         if (editingStep) {
-            prevData.push(editingStep)
-
-            set({ editingSteps: prevData })
+            set({ editingSteps: [...prevData, editingStep] })
         }
     },
     removeEditingStep: (stepUUID) => {
@@ -404,7 +412,7 @@ const slice: StateCreator<TRunningStore, [['zustand/devtools', never]], []> = (s
 
     clearStore: () => {
         set({ ...initialState })
-    }
+    },
 })
 
 const withDevtools = devtools(slice)

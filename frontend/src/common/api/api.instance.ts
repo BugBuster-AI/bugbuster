@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const LANGUAGE = import.meta.env.VITE_LANGUAGE || 'en';
+export { LANGUAGE } from '@Common/consts/env';
 
 export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'https://api.example.com/api/'
 

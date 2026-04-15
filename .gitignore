@@ -17,3 +17,6 @@ LICENSE.json
 
 # Logs and generated artifacts
 clicker/code_service/logs/
+
+# Codegen npm: commit lockfile; node_modules stay local / in Docker only
+clicker/src/codegen/node_runner/node_modules/

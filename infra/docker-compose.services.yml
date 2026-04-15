@@ -1,6 +1,7 @@
 networks:
   bugbuster:
     external: true
+
 services:
   ### BACKEND ###################################################
   # migrations #
@@ -121,11 +122,26 @@ services:
       INFERENCE_BASE_URL: ${INFERENCE_BASE_URL}
       INFERENCE_API_KEY: ${INFERENCE_API_KEY}
       INFERENCE_MODEL_NAME: ${INFERENCE_MODEL_NAME}
+      # Опционально: отдельный endpoint для codegen (иначе в clicker подставляется INFERENCE_* из config.py)
+      CODEGEN_AGENT_BASE_URL: ${CODEGEN_AGENT_BASE_URL:-}
+      CODEGEN_AGENT_API_KEY: ${CODEGEN_AGENT_API_KEY:-}
+      CODEGEN_USE_PLAYWRIGHT_MCP: ${CODEGEN_USE_PLAYWRIGHT_MCP:-1}
+      CODEGEN_VLM_TRACE_EXCERPT: ${CODEGEN_VLM_TRACE_EXCERPT:-1}
+      CODEGEN_AGENT_MODEL_NAME: ${CODEGEN_AGENT_MODEL_NAME:-}
+      CODEGEN_AGENT_PROVIDER: ${CODEGEN_AGENT_PROVIDER:-}
+      CODEGEN_SKIP_BROWSER_VALIDATE: ${CODEGEN_SKIP_BROWSER_VALIDATE:-0}
+      CODEGEN_USE_VLM_STEP_HTML: ${CODEGEN_USE_VLM_STEP_HTML:-1}
+      VLM_SAVE_STEP_HTML: ${VLM_SAVE_STEP_HTML:-1}
+      OPENROUTER_PROVIDER_EXTRA_BODY: ${OPENROUTER_PROVIDER_EXTRA_BODY:-}
       LANGFUSE_HOST: ${LANGFUSE_HOST}
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_CLICKER_PUBLIC_KEY}
       LANGFUSE_SECRET_KEY: ${LANGFUSE_CLICKER_SECRET_KEY}
       LOCALHOST_DISABLED: ${LOCALHOST_DISABLED}
       SERVER_IDENT: ${SERVER_IDENT}
+      SECRET_KEY_API: ${SECRET_KEY_API}
+      # URL portal-backend из сети compose (не требует строки в services.env)
+      BACKEND_BASE_URL: http://backend:7665
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
     command: >
       celery -A main_celery worker
       --loglevel=info
@@ -169,6 +185,7 @@ services:
       LANGFUSE_PUBLIC_KEY: ${LANGFUSE_REWRITER_PUBLIC_KEY}
       LANGFUSE_SECRET_KEY: ${LANGFUSE_REWRITER_SECRET_KEY}
       SERVER_IDENT: ${SERVER_IDENT}
+      PLAYWRIGHT_BROWSERS_PATH: /ms-playwright
   video_generate_service:
     build:
       context: ../infra/video-generate-service

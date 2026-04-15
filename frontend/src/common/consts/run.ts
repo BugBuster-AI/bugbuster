@@ -2,6 +2,7 @@ import { ERunStatus, IRunById } from '@Entities/runs/models';
 import { ETestCaseType } from '@Entities/test-case/models';
 
 export const REFETCH_RUN_INTERVAL = 3000
+export const REFETCH_RUN_INTERVAL_FAST = 1000
 
 export const NEED_REFETCH_STATUSES = [
     ERunStatus.UNTESTED,

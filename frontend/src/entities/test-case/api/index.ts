@@ -2,11 +2,14 @@ import { $api } from '@Common/api';
 import { ERunStatus } from '@Entities/runs/models';
 import {
     IChangeCasePosition,
+    ICodegenArtifactResponse,
+    ICodegenStatusResponse,
     IStartCaseRun,
     ITestCase,
     ITestCaseCreateFromRecordPayload,
     ITestCaseCreatePayload,
-    ITestCaseUpdatePayload
+    ITestCaseUpdatePayload,
+    TExecutionEngine
 } from '@Entities/test-case/models';
 
 export class TestCaseApi {
@@ -42,10 +45,46 @@ export class TestCaseApi {
         return (await $api.put('content/case', data)).data
     }
 
-    async runCase (caseId: string): Promise<IStartCaseRun> {
+    async runCase (caseId: string, executionEngine: TExecutionEngine = 'vlm'): Promise<IStartCaseRun> {
+        return (await $api.post(
+            `runs?case_id=${caseId}&execution_engine=${executionEngine}`,
+        )).data
+    }
 
-        //TODO: Узнать, почему в эндпоинте run_id
-        return (await $api.post(`runs?case_id=${caseId}`)).data
+    async getPlaywrightCodegenStatus (caseId: string, runId: string): Promise<ICodegenStatusResponse> {
+        return (await $api.get(`cases/${caseId}/codegen/playwright`, { params: { run_id: runId } })).data
+    }
+
+    async startPlaywrightCodegen (
+        caseId: string,
+        runId: string,
+        maxValidationAttempts: number = 10,
+    ): Promise<{ task_id: string; case_id: string; run_id: string }> {
+        return (await $api.post(`cases/${caseId}/codegen/playwright`, {
+            run_id: runId,
+            max_validation_attempts: maxValidationAttempts,
+        })).data
+    }
+
+    async getPlaywrightCodegenArtifact (caseId: string): Promise<ICodegenArtifactResponse> {
+        return (await $api.get(`cases/${caseId}/codegen/playwright/artifact`)).data
+    }
+
+    async getPlaywrightCodegenArtifactById (
+        caseId: string,
+        artifactId: string,
+    ): Promise<ICodegenArtifactResponse> {
+        return (await $api.get(
+            `cases/${caseId}/codegen/playwright/artifacts/${artifactId}`,
+        )).data
+    }
+
+    async deletePlaywrightCodegenArtifact (caseId: string): Promise<{ deleted: boolean; artifact_id: string }> {
+        return (await $api.delete(`cases/${caseId}/codegen/playwright/artifact`)).data
+    }
+
+    async clearPlaywrightCodegenJob (caseId: string): Promise<{ cleared: boolean }> {
+        return (await $api.delete(`cases/${caseId}/codegen/playwright/job`)).data
     }
 
     async stopCase (runId: string): Promise<void> {

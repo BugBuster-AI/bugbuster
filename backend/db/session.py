@@ -16,14 +16,22 @@ def custom_deserialize(value):
     return json.loads(value)
 
 
-engine = create_async_engine(DB_URL, future=True, echo=False,
-                             json_serializer=custom_serialize, json_deserializer=custom_deserialize)
+# asyncpg + pgbouncer (transaction/statement): без кэша prepared statements.
+engine = create_async_engine(
+    DB_URL,
+    future=True,
+    echo=False,
+    json_serializer=custom_serialize,
+    json_deserializer=custom_deserialize,
+    pool_pre_ping=True,
+    connect_args={"statement_cache_size": 0},
+)
 async_session = sessionmaker(engine, expire_on_commit=False, autoflush=False, class_=AsyncSession, future=True)
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
+    session: AsyncSession = async_session()
     try:
-        session: AsyncSession = async_session()
         yield session
     finally:
         await session.close()

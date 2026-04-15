@@ -20,9 +20,9 @@ from starlette.responses import JSONResponse, Response
 from api.actions import (reset_usage_and_check_tariff_expiration,
                          save_permissions_to_redis,
                          save_workspace_concurrency_limit_to_redis)
-from api.routers import (admin_content, auth, billing, content,
-                         environments_rout, records, runs, tokens,
-                         tools, workspaces, ws, variables, flags)
+from api.routers import (admin_content, auth, billing, codegen, content,
+                         environments_rout, internal_codegen, records, runs,
+                         tokens, tools, workspaces, ws, variables, flags)
 
 from background_publisher import publisher
 from config import (REDIS_PREFIX, UVICORN_PORT,
@@ -94,6 +94,8 @@ app.include_router(variables.router_variables_details)
 app.include_router(content.router)
 app.include_router(content.router_shared_steps)
 app.include_router(runs.router)
+app.include_router(codegen.router)
+app.include_router(internal_codegen.router)
 
 app.include_router(tools.router)
 

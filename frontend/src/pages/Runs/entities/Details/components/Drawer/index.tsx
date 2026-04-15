@@ -1,6 +1,8 @@
 import { EFromRedirect } from '@Common/types';
 import { useTestCaseStore } from '@Entities/test-case';
+import { CodeTab } from '@Features/test-case/drawer/components/CodeTab';
 import { TestCaseDrawer } from '@Features/test-case/drawer';
+import drawerLayoutStyles from '@Features/test-case/drawer/index.module.scss';
 import { TestCaseRunsHistory } from '@Features/test-case/runs-history';
 import {
     ChangeCaseControls
@@ -12,28 +14,16 @@ import { findCaseById } from '@Pages/Runs/entities/Details/components/SuiteTable
 import { useGroupedRunStore } from '@Pages/Runs/entities/Details/store';
 import { TabsProps } from 'antd';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { TopDrawerButtons, ExecutionDrawer, DrawerTitle } from './components';
-
-const drawerItems: TabsProps['items'] = [
-    {
-        key: '1',
-        label: 'Execution',
-        children: <ExecutionDrawer/>,
-    },
-    {
-        key: '2',
-        label: 'Run History',
-        children: <TestCaseRunsHistory/>,
-        destroyInactiveTabPane: true,
-    }
-]
 
 interface IProps {
     onClose: () => void
 }
 
 export const GroupCaseDrawer = ({ onClose }: IProps) => {
+    const { t } = useTranslation()
     const [opened, setOpened] = useState(true)
     const [currentCaseType, setCurrentCaseType] = useState(ECaseState.INITIAL)
     const currentCase = useTestCaseStore((state) => state.currentCase)
@@ -101,6 +91,39 @@ export const GroupCaseDrawer = ({ onClose }: IProps) => {
     }, [currentCase, runItem]);
 
     useInvalidateController(runItem?.group_run_id, currentCase?.actual_status)
+
+    const drawerItems: TabsProps['items'] = useMemo(() => [
+        {
+            key: '1',
+            label: t('drawerTabs.execution'),
+            children: (
+                <div className={ drawerLayoutStyles.tabPaneScroll }>
+                    <ExecutionDrawer/>
+                </div>
+            ),
+        },
+        {
+            key: '2',
+            children: (
+                <div className={ drawerLayoutStyles.tabPaneScroll }>
+                    <TestCaseRunsHistory/>
+                </div>
+            ),
+            destroyInactiveTabPane: true,
+            label: t('drawerTabs.run_history'),
+        },
+        {
+            key: '3',
+            children: (
+                <div className={ drawerLayoutStyles.codeTabPane }>
+                    <CodeTab/>
+                </div>
+            ),
+            destroyInactiveTabPane: true,
+            label: t('drawerTabs.codegen'),
+        },
+    ], [t])
+
     const memoizedProps = useMemo(() => ({
         currentCaseType,
         isLoading,

@@ -1,6 +1,6 @@
-
 import time
 import uuid
+from datetime import datetime, timezone
 from collections import defaultdict
 from copy import deepcopy
 from typing import Any, Dict, List, Optional, Set, Union
@@ -15,6 +15,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from api.actions import search_for_filter_cases, update_usage_count
+from api.codegen_actions import clear_codegen_job_data, codegen_job_running
+from api.services.codegen_case_read import enrich_case_read_codegen_async
+from api.services.codegen_eligibility import invalidate_codegen_artifact
+from api.services.steps_nl_normalization import (
+    assign_step_uids_new_case,
+    assign_step_uids_new_shared_steps,
+    compute_steps_content_hash,
+    ensure_step_uids_on_case_payload,
+    ensure_step_uids_on_shared_steps_update,
+)
 
 from api.record_actions import happy_pass_update_autosop
 from api.variables_actions import add_default_variables_kit
@@ -31,6 +41,17 @@ from schemas import (ApiStep, CaseCreate, CaseCreateFromRecord, CaseRead,
                      SharedStepsRead, SharedStepsUpdate, SuiteCreate,
                      SuiteRead, SuiteReadFull, SuiteSummary, SuiteUpdate)
 from utils import async_request
+
+
+async def case_read_with_playwright_eligibility(session: AsyncSession, case: Case, user: User) -> CaseRead:
+    base = CaseRead.model_validate(case)
+    return await enrich_case_read_codegen_async(
+        session,
+        case.case_id,
+        base,
+        workspace_id=user.active_workspace_id,
+        user_id=user.user_id,
+    )
 
 
 async def detect_expanded_shared_steps(case: CaseUpdate) -> bool:
@@ -635,6 +656,13 @@ async def create_case(user: User,
             )
             max_position = max_position_result.scalar_one_or_none() or 0
 
+            assign_step_uids_new_case(
+                case.before_browser_start,
+                case.before_steps,
+                case.steps,
+                case.after_steps,
+            )
+
             new_case = Case(
                 name=case.name,
                 context=case.context,
@@ -667,7 +695,7 @@ async def create_case(user: User,
                     session, new_case.case_id, shared_steps_ids
                 )
 
-            return CaseRead.model_validate(new_case)
+            return await case_read_with_playwright_eligibility(session, new_case, user)
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -894,7 +922,7 @@ async def case_from_record(user: User,
                     session, new_case.case_id, shared_steps_ids
                 )
 
-            return CaseRead.model_validate(new_case)
+            return await case_read_with_playwright_eligibility(session, new_case, user)
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -905,10 +933,10 @@ async def case_from_record(user: User,
 
 async def copy_case(case_ids: List[UUID4],
                     user: User,
-                    session: AsyncSession) -> List[UUID4]:
+                    session: AsyncSession) -> List[CaseRead]:
     try:
         async with session.begin():
-            new_cases_ids = []
+            created_cases: List[Case] = []
             for case_id in case_ids:
                 query = (
                     select(ProjectUser.user_id, Case)
@@ -962,11 +990,12 @@ async def copy_case(case_ids: List[UUID4],
 
                 await recalculate_positions(session, existing_case.suite_id, Case, "suite_id", "position")
                 await session.refresh(new_case)
-                # new_cases_ids.append(new_case.case_id)
-                new_cases_ids.append(CaseRead.model_validate(new_case))
+                created_cases.append(new_case)
 
-        # return CaseRead.model_validate(new_case)
-            return new_cases_ids
+            out: List[CaseRead] = []
+            for nc in created_cases:
+                out.append(await case_read_with_playwright_eligibility(session, nc, user))
+            return out
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -1090,6 +1119,8 @@ async def create_shared_steps(shared_steps: SharedStepsCreate,
                     full_action_plan.append({"action_type": step["type"], "value": step["value"]})
 
             logger.info(f"sop_validation: {is_valid=} | {validation_reason=} | {action_plan=}")
+
+            assign_step_uids_new_shared_steps(shared_steps.steps)
 
             new_shared_steps = SharedSteps(
                 name=shared_steps.name,
@@ -1471,6 +1502,36 @@ async def update_case(user: User,
             await validate_expected_steps(combined_before_browser_start,
                                           combined_before_steps,
                                           combined_after_steps)
+
+            ensure_step_uids_on_case_payload(
+                existing_case.before_browser_start,
+                existing_case.before_steps,
+                existing_case.steps,
+                existing_case.after_steps,
+                combined_before_browser_start,
+                combined_before_steps,
+                combined_steps,
+                combined_after_steps,
+            )
+            old_nl_hash = compute_steps_content_hash(
+                existing_case.before_browser_start,
+                existing_case.before_steps,
+                existing_case.steps,
+                existing_case.after_steps,
+            )
+            new_nl_hash = compute_steps_content_hash(
+                combined_before_browser_start,
+                combined_before_steps,
+                combined_steps,
+                combined_after_steps,
+            )
+            if old_nl_hash != new_nl_hash:
+                existing_case.codegen_regeneration_required = True
+                existing_case.codegen_regeneration_since = datetime.now(timezone.utc)
+                await invalidate_codegen_artifact(session, existing_case.case_id)
+                if not codegen_job_running(existing_case.case_id):
+                    clear_codegen_job_data(existing_case.case_id)
+
             # Валидируем SOP
             is_finally_automated = case.type == 'automated' if case.type is not None else existing_case.type == 'automated'
 
@@ -1662,7 +1723,7 @@ async def update_case(user: User,
 
             await session.flush()
             await session.refresh(existing_case)
-            return CaseRead.model_validate(existing_case)
+            return await case_read_with_playwright_eligibility(session, existing_case, user)
 
     except HTTPException as e:
         raise e
@@ -1889,6 +1950,7 @@ async def update_shared_steps(shared_steps: SharedStepsUpdate,
                 existing_shared_steps.description = shared_steps.description
 
             if shared_steps.steps is not None:
+                ensure_step_uids_on_shared_steps_update(existing_shared_steps.steps, sop)
                 existing_shared_steps.steps = shared_steps.steps
 
             await session.flush()
@@ -2071,7 +2133,7 @@ async def get_user_tree(user: User,
             if project_id and project_project_id != project_id:
                 return []
 
-            return [await transform_suite(suite, project_project_id, filter_cases)]
+            return [await transform_suite(suite, project_project_id, session, filter_cases, user)]
 
         if project_id:
             project_query = (
@@ -2092,7 +2154,7 @@ async def get_user_tree(user: User,
             if not project:
                 return []
 
-            return [await transform_project(project, filter_cases)]
+            return [await transform_project(project, session, filter_cases, user)]
 
         all_projects_query = (
             select(Project)
@@ -2111,7 +2173,7 @@ async def get_user_tree(user: User,
         et = time.perf_counter()
         logger.info(f"Query get_user_tree without filters: {(et - st):.4f} seconds")
 
-        return [await transform_project(project, filter_cases) for project in projects]
+        return [await transform_project(project, session, filter_cases, user) for project in projects]
 
     except HTTPException as e:
         raise e
@@ -2121,23 +2183,38 @@ async def get_user_tree(user: User,
         raise HTTPException(400, mess)
 
 
-async def transform_project(project: Project, filter_cases: Optional[str] = None) -> ProjectReadFull:
+async def transform_project(
+    project: Project,
+    session: AsyncSession,
+    filter_cases: Optional[str] = None,
+    user: Optional[User] = None,
+) -> ProjectReadFull:
     suites = sorted(project.suites, key=lambda s: s.position)
     return ProjectReadFull(
         project_id=project.project_id,
         name=project.name,
         description=project.description,
-        suites=[await transform_suite(suite, project.project_id, filter_cases) for suite in suites if not suite.parent_id]
+        suites=[
+            await transform_suite(suite, project.project_id, session, filter_cases, user)
+            for suite in suites
+            if not suite.parent_id
+        ],
     )
 
 
-async def transform_suite(suite: Suite, project_id: UUID4, filter_cases: Optional[str] = None) -> SuiteReadFull:
+async def transform_suite(
+    suite: Suite,
+    project_id: UUID4,
+    session: AsyncSession,
+    filter_cases: Optional[str] = None,
+    user: Optional[User] = None,
+) -> SuiteReadFull:
 
     children = sorted(await suite.awaitable_attrs.children, key=lambda s: s.position)
     cases = sorted(await suite.awaitable_attrs.cases, key=lambda c: c.position)
 
     # Фильтруем только кейсы
-    filtered_cases = [await transform_case(case, project_id, filter_cases) for case in cases]
+    filtered_cases = [await transform_case(case, project_id, session, filter_cases, user) for case in cases]
     # Убираем None (отфильтрованные кейсы)
     filtered_cases = [case for case in filtered_cases if case is not None]
 
@@ -2148,11 +2225,17 @@ async def transform_suite(suite: Suite, project_id: UUID4, filter_cases: Optiona
         parent_id=suite.parent_id,
         position=suite.position,
         cases=filtered_cases,
-        children=[await transform_suite(child, project_id, filter_cases) for child in children]
+        children=[await transform_suite(child, project_id, session, filter_cases, user) for child in children],
     )
 
 
-async def transform_case(case: Case, project_id: UUID4, filter_cases: Optional[str] = None) -> CaseRead:
+async def transform_case(
+    case: Case,
+    project_id: UUID4,
+    session: AsyncSession,
+    filter_cases: Optional[str] = None,
+    user: Optional[User] = None,
+) -> CaseRead:
 
     if filter_cases:
         case_data = {
@@ -2166,7 +2249,7 @@ async def transform_case(case: Case, project_id: UUID4, filter_cases: Optional[s
         if not search_for_filter_cases(filter_cases, case_data):
             return None
 
-    return CaseRead(
+    base = CaseRead(
         case_id=case.case_id,
         suite_id=case.suite_id,
         name=case.name,
@@ -2187,8 +2270,21 @@ async def transform_case(case: Case, project_id: UUID4, filter_cases: Optional[s
         position=case.position,
         variables=case.variables,
         project_id=project_id,
-        environment_id=case.environment_id
+        environment_id=case.environment_id,
+        codegen_regeneration_required=case.codegen_regeneration_required,
+        codegen_regeneration_since=case.codegen_regeneration_since,
+        codegen_first_requested_at=case.codegen_first_requested_at,
+        can_run_playwright_js=False,
     )
+    if user is not None:
+        return await enrich_case_read_codegen_async(
+            session,
+            case.case_id,
+            base,
+            workspace_id=user.active_workspace_id,
+            user_id=user.user_id,
+        )
+    return await enrich_case_read_codegen_async(session, case.case_id, base)
 
 
 async def get_list_projects(user: User,
@@ -2435,7 +2531,10 @@ async def case_by_external_id(external_id: str,
             if not cases:
                 raise HTTPException(status_code=404, detail="Case not found or Not authorized to read this case")
 
-        return [CaseRead.model_validate(case) for case in cases]
+        out: List[CaseRead] = []
+        for case in cases:
+            out.append(await case_read_with_playwright_eligibility(session, case, user))
+        return out
     except HTTPException as e:
         raise e
     except Exception as e:
@@ -2464,7 +2563,7 @@ async def case_by_case_id(case_id: str,
             if not case:
                 raise HTTPException(status_code=404, detail="Case not found or Not authorized to read this case")
 
-        return CaseRead.model_validate(case)
+        return await case_read_with_playwright_eligibility(session, case, user)
     except HTTPException as e:
         raise e
     except Exception as e:

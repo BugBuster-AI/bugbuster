@@ -10,6 +10,25 @@ from aio_pika.exceptions import DeliveryError
 from pamqp.commands import Basic
 
 
+def _celery_run_kwargs(task_to_run, case_data: CaseRead, run_id: str, background_video_generate: bool,
+                      group_run_id=None) -> dict:
+    eng = getattr(task_to_run, "execution_engine", None) or "vlm"
+    kwargs_mq = {
+        "run_id": run_id,
+        "user_id": str(task_to_run.user_id),
+        "case": case_data,
+        "environment": case_data.environment,
+        "background_video_generate": background_video_generate,
+        "execution_engine": eng,
+    }
+    if group_run_id is not None:
+        kwargs_mq["group_run_id"] = str(group_run_id)
+    aid = getattr(task_to_run, "playwright_codegen_artifact_id", None)
+    if eng == "playwright_js" and aid:
+        kwargs_mq["codegen_artifact_id"] = str(aid)
+    return kwargs_mq
+
+
 async def send_to_rabbitmq(queue_name, message, correlation_id, priority=0):
     try:
         connection = await connect_robust(BROKER_URL)
@@ -36,7 +55,7 @@ async def send_to_rabbitmq(queue_name, message, correlation_id, priority=0):
             if not isinstance(confirmation, Basic.Ack):
                 if confirmation.delivery.reply_text != 'NO_ROUTE':
                     logger.error(f"confirmation PROBLEM {confirmation.delivery.reply_text} on queue_name {queue_name}")
-                    raise "publish error"
+                    raise RuntimeError(f"publish error: {confirmation.delivery.reply_text}")
     except DeliveryError as e:
         logger.error(f"Delivery of  failed with exception: {e}")
         raise e
@@ -63,6 +82,8 @@ async def calculate_task_and_publish_to_rabbit():
     """Для каждого workspace берем задачи в IN_QUEUE (созданная запись по клику ран), считаем сколько можно отправить
     в очередь согласно лимитам workspace, проекта и group_run_case."""
     queue_name = f'{RABBIT_PREFIX}_celery.portal-clicker.run_single_case_queue'
+
+    pending_messages: list[tuple[str, bytes, str]] = []
 
     async with async_session() as session:
         async with transaction_scope(session):
@@ -201,21 +222,17 @@ async def calculate_task_and_publish_to_rabbit():
                 case_data = CaseRead.model_validate(task_to_run.current_case_version)
                 background_video_generate = task_to_run.background_video_generate
                 run_id = str(task_to_run.run_id)
+                kwargs_mq = _celery_run_kwargs(
+                    task_to_run, case_data, run_id, background_video_generate, group_run_id=None,
+                )
                 message = RunSingleCase(
                     id=run_id,
-                    run_id=run_id,
                     task=queue_name,
                     args=[],
-                    kwargs={
-                        "run_id": run_id,
-                        "user_id": str(task_to_run.user_id),
-                        "case": case_data,
-                        "environment": case_data.environment,
-                        "background_video_generate": background_video_generate
-                    }
+                    kwargs=kwargs_mq,
                 ).model_dump_json().encode('utf-8')
 
-                await send_to_rabbitmq(queue_name, message, run_id)
+                pending_messages.append((queue_name, message, run_id))
 
                 # Обновляем статус задачи
                 await session.execute(
@@ -297,22 +314,18 @@ async def calculate_task_and_publish_to_rabbit():
                         background_video_generate = task_to_run.background_video_generate
                         run_id = str(task_to_run.run_id)
 
+                        kwargs_mq = _celery_run_kwargs(
+                            task_to_run, case_data, run_id, background_video_generate,
+                            group_run_id=group_run_id,
+                        )
                         message = RunSingleCase(
                             id=run_id,
-                            run_id=run_id,
                             task=queue_name,
                             args=[],
-                            kwargs={
-                                "run_id": run_id,
-                                "user_id": str(task_to_run.user_id),
-                                "case": case_data,
-                                "group_run_id": str(group_run_id),
-                                "environment": case_data.environment,
-                                "background_video_generate": background_video_generate
-                            }
+                            kwargs=kwargs_mq,
                         ).model_dump_json().encode('utf-8')
 
-                        await send_to_rabbitmq(queue_name, message, run_id)
+                        pending_messages.append((queue_name, message, run_id))
 
                         await session.execute(
                             update(RunCase)
@@ -361,22 +374,18 @@ async def calculate_task_and_publish_to_rabbit():
                     background_video_generate = task_to_run.background_video_generate
                     run_id = str(task_to_run.run_id)
 
+                    kwargs_mq = _celery_run_kwargs(
+                        task_to_run, case_data, run_id, background_video_generate,
+                        group_run_id=group_run_id,
+                    )
                     message = RunSingleCase(
                         id=run_id,
-                        run_id=run_id,
                         task=queue_name,
                         args=[],
-                        kwargs={
-                            "run_id": run_id,
-                            "user_id": str(task_to_run.user_id),
-                            "case": case_data,
-                            "group_run_id": str(group_run_id),
-                            "environment": case_data.environment,
-                            "background_video_generate": background_video_generate
-                        }
+                        kwargs=kwargs_mq,
                     ).model_dump_json().encode('utf-8')
 
-                    await send_to_rabbitmq(queue_name, message, run_id)
+                    pending_messages.append((queue_name, message, run_id))
 
                     await session.execute(
                         update(RunCase)
@@ -389,6 +398,9 @@ async def calculate_task_and_publish_to_rabbit():
                     data['par_active'] += 1
                     project_data[project_id]['current_running_group'] += 1
                     workspace_data[workspace_id]['current_running_group'] += 1
+
+    for q_name, msg, corr_id in pending_messages:
+        await send_to_rabbitmq(q_name, msg, corr_id)
 
 
 async def publisher():

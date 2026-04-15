@@ -1,4 +1,4 @@
-import { PROGRESS_STATUSES, REFETCH_RUN_INTERVAL } from '@Common/consts/run.ts';
+import { PROGRESS_STATUSES, REFETCH_RUN_INTERVAL, REFETCH_RUN_INTERVAL_FAST } from '@Common/consts/run.ts';
 import { getErrorMessage } from '@Common/utils/getErrorMessage.ts';
 import { runsQueries } from '@Entities/runs/queries';
 import { useTestCaseStore } from '@Entities/test-case';
@@ -20,7 +20,8 @@ export const InProgressCase = () => {
             const status = get(query, 'state.data.status', null)
 
             if (includes(PROGRESS_STATUSES, status)) {
-                return REFETCH_RUN_INTERVAL
+                const engine = get(query, 'state.data.execution_engine', null)
+                return engine === 'playwright_js' ? REFETCH_RUN_INTERVAL_FAST : REFETCH_RUN_INTERVAL
             } else if (!!status) {
                 setCaseFetching(false)
             }

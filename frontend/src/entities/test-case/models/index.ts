@@ -1,3 +1,4 @@
+import type { IResolution } from '@Entities/environment/models';
 import { ERunStatus, IMedia } from '@Entities/runs/models';
 import { EStepType } from '@Entities/test-case/components/Form/models.ts';
 import { IExtraCaseType } from '@Entities/test-case/models/test-case-variables.ts';
@@ -7,6 +8,13 @@ export interface ITestCaseListItem {
     name: string;
     type: ETestCaseType;
     position: number;
+    /** Playwright codegen (из user_tree / get_case_by_case_id) */
+    codegen_regeneration_required?: boolean;
+    can_run_playwright_js?: boolean;
+    codegen_job_state?: string | null;
+    /** Есть ли подходящий VLM-прогон для старта генерации кода */
+    codegen_can_start_reference?: boolean;
+    codegen_reference_block_reason?: string | null;
 }
 
 export enum ETestCaseType {
@@ -20,9 +28,70 @@ export enum ETestCasePriority {
     Low = 'Low'
 }
 
+export type TExecutionEngine = 'vlm' | 'playwright_js'
+
+export interface ICodegenEligibility {
+    allowed: boolean
+    reason_code?: string | null
+}
+
+export interface ICodegenJobError {
+    message?: string
+    step_uid?: string | null
+    reason_code?: string
+}
+
+export interface ICodegenLogEntry {
+    t?: string
+    level?: string
+    message?: string
+    step_uid?: string | null
+    phase?: string | null
+    /** Presigned GET из backend (лог в MinIO) */
+    screenshot_url?: string | null
+    /** Legacy: inline base64 из старых записей Redis */
+    screenshot_base64?: string | null
+    screenshot_mime_type?: string | null
+}
+
+export interface ICodegenJobState {
+    task_id?: string | null
+    state?: string | null
+    error?: ICodegenJobError | null
+    run_id?: string | null
+    log?: ICodegenLogEntry[]
+    /** Per-step validation attempts cap chosen when the job was started */
+    max_validation_attempts?: number | null
+    /** ISO timestamp последнего обновления задачи в Redis (бэкенд) */
+    updated_at?: string | null
+}
+
+export interface ICodegenStatusResponse {
+    codegen_regeneration_required: boolean
+    codegen_regeneration_since?: string | null
+    codegen_first_requested_at?: string | null
+    source_run_id?: string | null
+    job: ICodegenJobState
+    codegen_eligibility?: ICodegenEligibility
+}
+
+export interface ICodegenStepSpan {
+    step_uid: string
+    start_line: number
+    end_line: number
+}
+
+export interface ICodegenArtifactResponse {
+    source_code: string
+    step_spans: ICodegenStepSpan[]
+    source_run_id: string
+    artifact_id: string
+}
+
 export interface ITestCaseStep {
     type: EStepType
     value: string
+    step_uid?: string
     extra?: IExtraCaseType | null
 
     // Дополнительные поля (только для API шагов)
@@ -62,8 +131,26 @@ export interface ITestCase {
     case_type_in_run?: ETestCaseType
     actual_run_id?: string,
     environment_id?: string | null
+    /**
+     * Снимок окружения с бэкенда (например в `current_case_version`): разрешение viewport — `resolution`.
+     */
+    environment?: {
+        environment_id?: string
+        resolution?: IResolution
+        title?: string
+        browser?: string
+        operation_system?: string
+        project_id?: string
+    } | null
     project_id?: string
     actual_status?: ERunStatus
+    codegen_regeneration_required?: boolean
+    codegen_regeneration_since?: string | null
+    codegen_first_requested_at?: string | null
+    can_run_playwright_js?: boolean
+    codegen_job_state?: string | null
+    codegen_job_updated_at?: string | null
+    codegen_job_error_reason_code?: string | null
 }
 
 export interface IActionPlan {
@@ -108,6 +195,7 @@ export interface ITestCaseUpdatePayload extends Partial<ITestCaseCreatePayload> 
 
 export interface IStartCaseRun {
     run_id: string
+    execution_engine?: TExecutionEngine
 }
 
 export interface IChangeCasePosition {

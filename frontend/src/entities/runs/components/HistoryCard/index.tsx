@@ -8,7 +8,7 @@ import { getRunInfo } from '@Entities/runs/utils/runInfo.ts';
 import { TestTypeIcon } from '@Entities/test-case/components/Icons';
 import { RunStepsView } from '@Entities/test-case/components/StepsView/RunStepsView.tsx';
 import { useLocalRunStepsData } from '@Entities/test-case/hooks/useLocalStepData.ts';
-import { Button, Collapse, CollapseProps, Flex, Typography } from 'antd';
+import { Button, Collapse, CollapseProps, Flex, Tag, Typography } from 'antd';
 import dayjs from 'dayjs'
 import { MouseEvent, ReactElement, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -63,6 +63,11 @@ export const RunHistoryCard = (run: IProps): ReactElement => {
                             {dayjs(created_at).format('DD.MM.YYYY HH:mm:ss')}
                         </Typography.Text>
                         <StatusBadge status={ status }/>
+                        <Tag>
+                            {run?.execution_engine === 'playwright_js'
+                                ? t('codegen.execution_badge_script')
+                                : t('codegen.execution_badge_vlm')}
+                        </Tag>
                     </Flex>
                     <Flex align={ 'center' } gap={ 8 }>
                         <Typography.Text style={ { marginRight: '24px' } }>

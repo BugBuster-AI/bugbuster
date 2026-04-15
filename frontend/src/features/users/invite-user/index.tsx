@@ -27,7 +27,7 @@ export const InviteUser = () => {
 
         const formData = {
             ...data,
-            language: 'ru'
+            language: 'en'
         } as IInviteUserDto
 
         await asyncHandler(mutateAsync.bind(null, formData), {

@@ -577,6 +577,18 @@ class CaseRead(CaseBase):
     suite_id: UUID4
     project_id: Optional[UUID4] = None
     position: int
+    codegen_regeneration_required: bool = False
+    codegen_regeneration_since: Optional[datetime] = None
+    codegen_first_requested_at: Optional[datetime] = None
+    can_run_playwright_js: bool = False
+    codegen_job_state: Optional[str] = None
+    codegen_job_updated_at: Optional[datetime] = None
+    codegen_job_error_reason_code: Optional[str] = None
+    codegen_can_start_reference: bool = Field(
+        default=False,
+        description="Whether a VLM reference run exists so codegen could be started (repository list).",
+    )
+    codegen_reference_block_reason: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -719,6 +731,50 @@ class RunSingleCase(BaseModel):
     task: str
     args: list
     kwargs: Dict
+
+
+class PlaywrightCodegenStartBody(BaseModel):
+    run_id: UUID4
+    max_validation_attempts: int = Field(
+        default=10,
+        ge=1,
+        le=20,
+        description="Per NL step: draft + repair rounds after Playwright/MCP validation failures (total tries, max 20).",
+    )
+
+
+class RunExecutionEngine(str, Enum):
+    vlm = "vlm"
+    playwright_js = "playwright_js"
+
+
+class InternalCodegenFinalizeBody(BaseModel):
+    case_id: UUID4
+    source_run_id: UUID4
+    source_code: str
+    step_spans: List[Dict[str, Any]]
+    steps_content_hash: str
+    generator_meta: Optional[Dict[str, Any]] = None
+
+
+class InternalCodegenFailBody(BaseModel):
+    case_id: UUID4
+    message: str
+    step_uid: Optional[str] = None
+    reason_code: str = "codegen_step_failed"
+
+
+class InternalCodegenLogBody(BaseModel):
+    case_id: UUID4
+    message: str
+    level: str = "info"
+    step_uid: Optional[str] = None
+    phase: Optional[str] = None
+    # Предпочтительно: объект уже в MinIO (clicker заливает JPEG).
+    screenshot_minio: Optional[Dict[str, str]] = None
+    # Legacy: backend сам кладёт в codegen/screenshots/ и в JSON пишет только ref.
+    screenshot_base64: Optional[Annotated[str, Field(max_length=15_000_000)]] = None
+    screenshot_mime_type: str = "image/jpeg"
 
 
 class GroupRunCaseCreate(BaseModel):

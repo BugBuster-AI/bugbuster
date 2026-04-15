@@ -1,4 +1,5 @@
-import { NEED_REFETCH_STATUSES, REFETCH_RUN_INTERVAL } from '@Common/consts/run.ts';
+import { NEED_REFETCH_STATUSES, REFETCH_RUN_INTERVAL, REFETCH_RUN_INTERVAL_FAST } from '@Common/consts/run.ts';
+import { ERunStatus } from '@Entities/runs/models';
 import { runsQueries } from '@Entities/runs/queries';
 import { useRunningStore } from '@Pages/RunningCase/store';
 import { prepareRunWithStepIds } from '@Pages/RunningCase/utils';
@@ -14,15 +15,22 @@ export const useRunningData = () => {
     const editingSteps = useRunningStore((state) => state.editingSteps)
     const selectedStep = useRunningStore((state) => state.selectedStep)
     const setSelectedEditingStep = useRunningStore((state) => state.setSelectedEditingStep)
+    const setExecutionPanelView = useRunningStore((state) => state.setExecutionPanelView)
+
+    useEffect(() => {
+        setExecutionPanelView('run')
+    }, [runId])
 
     const needRefetchVideo = !currentRun?.video
     const needRefetchSteps = includes(NEED_REFETCH_STATUSES, currentRun?.status)
+    const isPlaywrightInProgress =
+        currentRun?.execution_engine === 'playwright_js' && currentRun?.status === ERunStatus.IN_PROGRESS
 
     const { data, isLoading, isError, error } = useQuery({
         ...runsQueries.runningCase(runId!!, {
             refetchInterval: () => {
                 if (needRefetchSteps || needRefetchVideo) {
-                    return REFETCH_RUN_INTERVAL
+                    return isPlaywrightInProgress ? REFETCH_RUN_INTERVAL_FAST : REFETCH_RUN_INTERVAL
                 }
 
                 return undefined

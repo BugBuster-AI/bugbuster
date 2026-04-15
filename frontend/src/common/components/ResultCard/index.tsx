@@ -3,19 +3,27 @@ import { useThemeToken } from '@Common/hooks';
 import { formatSeconds } from '@Common/utils/formatSeconds.ts';
 import { ERunStatus } from '@Entities/runs/models';
 import { getReflectionStatus } from '@Entities/runs/utils/getReflectionStatus';
+import { ansiToReactNodes } from '@Features/test-case/playwright-codegen/codegenLogAnsi';
 import { Flex, Typography } from 'antd';
 import cn from 'classnames';
 import parse from 'html-react-parser';
 import isUndefined from 'lodash/isUndefined';
-import { memo, CSSProperties, useState } from 'react';
+import { memo, CSSProperties, type ReactNode, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { OverflowContainer } from '../OverflowContainer';
 import { StatusIndicator } from '../StatusIndicator';
 import styles from './ResultCard.module.scss'
 
+export type TResultTextFormat = 'html' | 'ansi'
+
 interface IProps {
     status: ERunStatus | boolean
     result?: string | null
+    /**
+     * По умолчанию html (как раньше через html-react-parser).
+     * ansi — для логов/ошибок Playwright с ESC-последовательностями.
+     */
+    resultFormat?: TResultTextFormat
     time?: string
     helperText?: string
     needIcon?: boolean
@@ -25,13 +33,32 @@ interface IProps {
 
 const MAX_HEIGHT = 142
 
+function renderResultBody (value: string | ReactNode, format: TResultTextFormat): ReactNode {
+    if (typeof value !== 'string') {
+        return value;
+    }
+    if (format === 'ansi') {
+        return ansiToReactNodes(value);
+    }
+
+    return parse(value);
+}
+
 export const ResultContent = memo((
-    { value, bgColor, style, showMoreBtnStyle }:
-     {value?: string | null, bgColor?: string, style?: CSSProperties, showMoreBtnStyle?: CSSProperties }
+    { value, bgColor, style, showMoreBtnStyle, format = 'html' }:
+     {
+         value?: string | ReactNode | null;
+         bgColor?: string;
+         style?: CSSProperties;
+         showMoreBtnStyle?: CSSProperties;
+         format?: TResultTextFormat;
+     }
 ) => {
     const [isOpened, setIsOpened] = useState(false);
 
-    if (!value) return null
+    if (value == null || value === '') {
+        return null;
+    }
 
     const handleOpen = () => {
         setIsOpened(!isOpened)
@@ -58,7 +85,7 @@ export const ResultContent = memo((
                         } as CSSProperties 
                         }
                     >
-                        {typeof value === 'string' ? parse(value) : value}
+                        {renderResultBody(value, format)}
                         {(hasOverflow || isOpened) && (
                             <p className={ styles.moreBtn } onClick={ handleOpen } style={ showMoreBtnStyle }>
                                 {overflowText}
@@ -72,7 +99,16 @@ export const ResultContent = memo((
 })
 
 
-export const ResultCard = ({ status, title, size='small', needIcon, result, time, helperText }: IProps) => {
+export const ResultCard = ({
+    status,
+    title,
+    size = 'small',
+    needIcon,
+    result,
+    resultFormat = 'html',
+    time,
+    helperText,
+}: IProps) => {
     const token = useThemeToken()
 
     const getColors = () => {
@@ -145,7 +181,7 @@ export const ResultCard = ({ status, title, size='small', needIcon, result, time
                         {title}
                     </Typography.Text>
                     }
-                    <ResultContent bgColor={ backgroundColor } value={ result } />
+                    <ResultContent bgColor={ backgroundColor } format={ resultFormat } value={ result } />
                 </Flex>
             </Flex>
 

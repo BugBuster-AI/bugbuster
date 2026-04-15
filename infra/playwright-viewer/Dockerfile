@@ -1,22 +1,15 @@
-FROM node:22.5.1
+FROM node:22-slim
 
 WORKDIR /app
 
-ARG LANGUAGE
 ARG PORT=4172
-
 ENV PORT=${PORT}
-ENV VITE_LANGUAGE=${LANGUAGE}
 
-COPY package.json package-lock.json ./
-COPY packages/ ./packages/
-
-RUN npm i --legacy-peer-deps
-
-COPY . .
-
-RUN npm run build
+RUN npm init -y && \
+    npm install --no-optional \
+      playwright-core@1.59.0-alpha-1771104257000 \
+      serve
 
 EXPOSE ${PORT}
 
-CMD ["sh", "-c", "npm run trace-viewer -- --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "npx serve -s node_modules/playwright-core/lib/vite/traceViewer -l tcp://0.0.0.0:$PORT --no-clipboard"]

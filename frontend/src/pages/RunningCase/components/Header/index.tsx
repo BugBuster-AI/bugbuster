@@ -1,58 +1,37 @@
 import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
 import { PATHS } from '@Common/consts';
+import { URL_QUERY_KEYS } from '@Common/consts/searchParams.ts';
 import { useThemeToken } from '@Common/hooks';
 import { ITestCase } from '@Entities/test-case/models';
-import { useWorkspaceStore } from '@Entities/workspace/store';
 import { ControlPanel } from '@Pages/RunningCase/components/Header/components';
 import { useRunningStore } from '@Pages/RunningCase/store';
 import { Button, Flex, Skeleton, Typography } from 'antd';
 import { Header as AntHeader } from 'antd/es/layout/layout';
 import get from 'lodash/get';
-import { useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 export const Header = () => {
     const token = useThemeToken()
     const currentRun = useRunningStore((state) => state.currentRun)
     const currentCase = get(currentRun, 'case', null) as ITestCase
     const navigate = useNavigate()
-    const workspace = useWorkspaceStore((state) => state.workspace)
-    const { state } = useLocation()
-    const from = get(state, 'from', null)
-
-    /*
-     * const [searchParams] = useSearchParams()
-     * const { getBackPath } = useBackPath()
-     */
-
-    useEffect(() => {
-        const sessionFrom = sessionStorage.getItem('fromPathRunningCase')
-
-        if (!sessionFrom && from) {
-            sessionStorage.setItem('fromPathRunningCase', from)
-        }
-
-        return () => {
-            sessionStorage.removeItem('fromPathRunningCase')
-        }
-    }, [])
 
     const handleBack = () => {
-        const sessionFrom = sessionStorage.getItem('fromPathRunningCase')
+        const projectId = currentCase?.project_id
+        const caseId = currentCase?.case_id
 
-        if (sessionFrom) {
-            navigate(sessionFrom)
+        if (projectId && caseId) {
+            const qs = new URLSearchParams()
+            qs.set(URL_QUERY_KEYS.CASE_ID, String(caseId))
+            qs.set(URL_QUERY_KEYS.OPEN, '1')
+            navigate(`${PATHS.REPOSITORY.ABSOLUTE(projectId)}?${qs.toString()}`)
 
             return
-        } 
-
-        if (workspace?.workspace_id) {
-            navigate(-1)
-        } else {
-            navigate(PATHS.REPOSITORY.ABSOLUTE(currentCase.project_id!))
         }
 
-        return
+        if (projectId) {
+            navigate(PATHS.REPOSITORY.ABSOLUTE(projectId))
+        }
     }
 
     const handleEditCase = () => {

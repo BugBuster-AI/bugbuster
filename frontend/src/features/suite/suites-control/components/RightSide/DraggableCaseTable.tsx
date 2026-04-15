@@ -17,7 +17,8 @@ import { TestTypeIcon } from '@Entities/test-case/components/Icons';
 import { ETestCaseType, ITestCaseListItem } from '@Entities/test-case/models';
 import { useUpdateTestCase } from '@Entities/test-case/queries';
 import { useSuitesControlContext } from '@Features/suite/suites-control/context';
-import { Empty, Flex, Table, Typography } from 'antd';
+import type { GlobalToken } from 'antd/es/theme';
+import { Empty, Flex, Table, Tooltip, Typography } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import { TableProps } from 'antd/lib';
 import filter from 'lodash/filter';
@@ -33,8 +34,68 @@ import React, {
     useRef,
     useState
 } from 'react';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
+
+type TCodegenBadge = { color: 'default' | 'success' | 'processing' | 'error' | 'warning'; text: string; tooltip?: string }
+
+/** Заголовок колонки без переноса строки */
+function tableHeaderTitle (text: string): ReactNode {
+    return <span style={ { whiteSpace: 'nowrap' } }>{text}</span>
+}
+
+function codegenStatusDotFill (kind: TCodegenBadge['color'], token: GlobalToken): string {
+    switch (kind) {
+        case 'success':
+            return token.colorSuccess
+        case 'processing':
+            return token.colorInfo
+        case 'error':
+            return token.colorError
+        case 'warning':
+            return token.colorWarning
+        default:
+            return token.colorTextQuaternary
+    }
+}
+
+function codegenStatusTooltipTitle (b: TCodegenBadge): ReactNode {
+    if (!b.tooltip) {
+        return b.text
+    }
+    return (
+        <div style={ { maxWidth: 280 } }>
+            <div style={ { fontWeight: 600 } }>{b.text}</div>
+            <div style={ { marginTop: 6, fontSize: 12, lineHeight: 1.45, opacity: 0.92 } }>{b.tooltip}</div>
+        </div>
+    )
+}
+
+function codegenStatusBadge (record: ITestCaseListItem, t: TFunction): TCodegenBadge {
+    const state = record.codegen_job_state
+    if (state === 'queued' || state === 'running') {
+        return { color: 'processing', text: t('table.codegen_status_in_progress') }
+    }
+    if (state === 'failure') {
+        return { color: 'error', text: t('table.codegen_status_error') }
+    }
+    if (record.codegen_regeneration_required) {
+        return { color: 'warning', text: t('table.codegen_status_regen') }
+    }
+    if (record.codegen_can_start_reference === false && record.codegen_reference_block_reason) {
+        const reason = record.codegen_reference_block_reason
+        return {
+            color: 'default',
+            text: t('table.codegen_status_blocked'),
+            tooltip: t(`codegen.eligibility.${reason}`, { defaultValue: reason }),
+        }
+    }
+    if (record.can_run_playwright_js) {
+        return { color: 'success', text: t('table.codegen_status_ready') }
+    }
+    return { color: 'default', text: t('table.codegen_status_none') }
+}
 
 interface IDraggableRowProps {
     id: UniqueIdentifier;
@@ -139,22 +200,24 @@ const OverlayRow = ({ isInsideSortContainer }: { isInsideSortContainer: boolean 
 
 /** Сервис, который ловит ивенты драг-н-дропа */
 const SortingManager = ({ onDragEnd }: { onDragEnd: (activeId: Number, overId: Number, caseId: string) => void }) => {
-
-    const handleEnd = (e: Event) => {
-        const event = e as CustomEvent<DragEndEvent>
-
-        const active = event.detail?.active
-        const over = event.detail?.over
-
-        const activeData = active?.data?.current
-        const overData = over?.data?.current
-
-        if (active && over && activeData && overData?.overType !== DragOverTypes.SUITE) {
-            onDragEnd(active.id as number, over?.id as number, activeData?.case_id)
-        }
-    }
+    const onDragEndRef = useRef(onDragEnd);
+    onDragEndRef.current = onDragEnd;
 
     useEffect(() => {
+        const handleEnd = (e: Event) => {
+            const event = e as CustomEvent<DragEndEvent>
+
+            const active = event.detail?.active
+            const over = event.detail?.over
+
+            const activeData = active?.data?.current
+            const overData = over?.data?.current
+
+            if (active && over && activeData && overData?.overType !== DragOverTypes.SUITE) {
+                onDragEndRef.current(active.id as number, over?.id as number, activeData?.case_id)
+            }
+        }
+
         window.addEventListener(DragCaseEvents.DRAG_END, handleEnd)
 
         return () => {
@@ -219,7 +282,7 @@ export const DraggableCaseTable = ({
         },
         Table.SELECTION_COLUMN,
         {
-            title: t('table.type'),
+            title: tableHeaderTitle(t('table.type')),
             key: 'type',
             width: 68,
             align: 'center',
@@ -227,7 +290,41 @@ export const DraggableCaseTable = ({
             render: (value) => <TestTypeIcon type={ value as ETestCaseType }/>
         },
         {
-            title: t('table.id'),
+            title: tableHeaderTitle(t('table.codegen')),
+            key: 'codegen',
+            width: 64,
+            minWidth: 64,
+            align: 'center',
+            dataIndex: 'codegen_job_state',
+            render: (_value, record) => {
+                const b = codegenStatusBadge(record as ITestCaseListItem, t)
+                const fill = codegenStatusDotFill(b.color, token)
+                const dot = (
+                    <span
+                        role="img"
+                        aria-label={ b.text }
+                        style={ {
+                            display: 'inline-block',
+                            width: 10,
+                            height: 10,
+                            borderRadius: '50%',
+                            background: fill,
+                            boxShadow: `0 0 0 1px ${token.colorBorderSecondary} inset`,
+                            verticalAlign: 'middle',
+                        } }
+                    />
+                )
+                return (
+                    <Tooltip title={ codegenStatusTooltipTitle(b) } mouseEnterDelay={ 0.15 }>
+                        <span style={ { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minHeight: 22 } }>
+                            {dot}
+                        </span>
+                    </Tooltip>
+                )
+            },
+        },
+        {
+            title: tableHeaderTitle(t('table.id')),
             key: 'case_id',
             width: 80,
             ellipsis: true,
@@ -235,7 +332,7 @@ export const DraggableCaseTable = ({
             dataIndex: 'case_id',
         },
         {
-            title: t('table.name'),
+            title: tableHeaderTitle(t('table.name')),
             key: 'name',
             dataIndex: 'name',
         }
