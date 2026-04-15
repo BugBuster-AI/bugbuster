@@ -21,7 +21,11 @@ export const ExtraTabButtons = ({ caseId, onClose }: { caseId: string, onClose: 
                 />
             </Flex>
 
-            <RunButton case_id={ caseId } disabled={ currentCase?.type === ETestCaseType.manual }/>
+            <RunButton
+                canRunPlaywrightJs={ currentCase?.can_run_playwright_js === true }
+                case_id={ caseId }
+                disabled={ currentCase?.type === ETestCaseType.manual }
+            />
         </Flex>
     )
 }

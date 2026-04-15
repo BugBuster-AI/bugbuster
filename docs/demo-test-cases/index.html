@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Демо тест-кейсы для Bugbuster</title>
+  <style>
+    :root {
+      --bg: #f8f9fb;
+      --card: #fff;
+      --border: #e2e6ed;
+      --text: #1a1d24;
+      --muted: #5c6370;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --code-bg: #f1f3f7;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", sans-serif;
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .layout {
+      max-width: 52rem;
+      margin: 0 auto;
+      padding: 1.25rem 1.25rem 3rem;
+    }
+    header.doc-header {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem 1.5rem 1.25rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    header.doc-header h1 {
+      margin: 0 0 0.75rem;
+      font-size: 1.65rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+    }
+    header.doc-header p { margin: 0.5rem 0; color: var(--muted); }
+    header.doc-header p.lead { color: var(--text); }
+    nav.toc {
+      background: var(--accent-soft);
+      border: 1px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0 0;
+    }
+    nav.toc strong { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--accent); }
+    nav.toc ol { margin: 0; padding-left: 1.25rem; }
+    nav.toc li { margin: 0.35rem 0; }
+    nav.toc a { color: var(--accent); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+    nav.toc-sub { list-style: none; padding-left: 0; margin: 0.25rem 0 0; font-size: 0.92rem; }
+    nav.toc-sub li { margin: 0.2rem 0; }
+    section.block {
+      margin-top: 2rem;
+      scroll-margin-top: 1rem;
+    }
+    section.block > h2 {
+      font-size: 1.35rem;
+      margin: 0 0 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .meta-line { margin: 0.35rem 0; color: var(--muted); }
+    .meta-line code { color: var(--text); }
+    article.tc, article.gloss {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem 1.25rem;
+      margin-bottom: 1rem;
+      scroll-margin-top: 0.75rem;
+    }
+    article.gloss { border-left: 4px solid var(--accent); }
+    article.tc h3, article.gloss h3 {
+      margin: 0 0 0.85rem;
+      font-size: 1.05rem;
+      font-weight: 650;
+      color: #111827;
+    }
+    dl.tc-rows { margin: 0; }
+    dl.tc-rows dt {
+      margin: 0.65rem 0 0.25rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+    dl.tc-rows dt:first-child { margin-top: 0; }
+    dl.tc-rows dd {
+      margin: 0;
+      padding: 0.5rem 0.65rem;
+      background: var(--code-bg);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      user-select: text;
+    }
+    ol.steps {
+      margin: 0;
+      padding-left: 1.35rem;
+    }
+    ol.steps li { margin: 0.35rem 0; }
+    code, kbd {
+      font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+      font-size: 0.92em;
+      background: rgba(0,0,0,.06);
+      padding: 0.12em 0.35em;
+      border-radius: 4px;
+    }
+    dd p { margin: 0; }
+    aside.note {
+      margin-top: 0.75rem;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+      border-left: 3px solid #cbd5e1;
+      background: #f8fafc;
+    }
+    .gloss-short {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+    table.summary {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    table.summary th, table.summary td {
+      padding: 0.65rem 0.85rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    table.summary th { background: #f1f5f9; font-weight: 600; font-size: 0.85rem; }
+    table.summary tr:last-child td { border-bottom: none; }
+    footer.doc-footer {
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.88rem;
+      color: var(--muted);
+    }
+    .mark-banner {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
+      margin-top: 1rem;
+      padding: 0.65rem 0.85rem;
+      background: #fefce8;
+      border: 1px solid #fde047;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #713f12;
+    }
+    .mark-banner kbd {
+      background: rgba(0,0,0,.08);
+      font-size: 0.85em;
+    }
+    #mark-status {
+      font-weight: 600;
+      color: #0f172a;
+      white-space: nowrap;
+    }
+    .tc-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 0.5rem 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .mark-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      cursor: pointer;
+      user-select: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--muted);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #fafbfc;
+      flex-shrink: 0;
+    }
+    .mark-label:hover { border-color: #94a3b8; color: var(--text); }
+    .mark-label:has(.case-mark:checked) {
+      border-color: #86efac;
+      background: #f0fdf4;
+      color: #166534;
+    }
+    .case-mark {
+      width: 1.1rem;
+      height: 1.1rem;
+      accent-color: #16a34a;
+      cursor: pointer;
+    }
+    article.tc.is-marked {
+      border-color: #86efac;
+      box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.15);
+      background: linear-gradient(180deg, #fafffe 0%, var(--card) 2.5rem);
+    }
+    article.tc .tc-head h3 {
+      margin: 0;
+      flex: 1;
+      min-width: min(100%, 12rem);
+    }
+    @media print {
+      body { background: #fff; }
+      nav.toc { break-inside: avoid; }
+      article.tc { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <header class="doc-header">
+      <h1>Демо тест-кейсы для Bugbuster</h1>
+      <p class="lead">Подборка проверена обходом страниц через Playwright (февраль 2026). Каждый кейс — <strong>законченный пользовательский путь</strong>; повторяющиеся фрагменты (авторизация) заданы в глоссарии и сокращаются ссылкой <strong>G-1</strong> / <strong>G-2</strong>.</p>
+      <p><strong>Правила формулировок:</strong> одно действие — один шаг; контекст → элемент; подписи с экрана на языке UI (английский); без селекторов.</p>
+      <div class="mark-banner" role="status">
+        <span>Пометки «занесено в Bugbuster» хранятся <strong>только до перезагрузки</strong> вкладки (без сохранения на диск).</span>
+        <span id="mark-status" aria-live="polite">Отмечено: 0 / 0</span>
+      </div>
+      <nav class="toc" aria-label="Содержание">
+        <strong>Содержание</strong>
+        <ol>
+          <li><a href="#glossary">Глоссарий (G-1, G-2)</a></li>
+          <li><a href="#swag">Swag Labs</a></li>
+          <li><a href="#net">The Internet</a></li>
+          <li><a href="#todo">TodoMVC</a></li>
+          <li><a href="#blaze">BlazeDemo</a></li>
+          <li><a href="#optional">Опционально</a></li>
+          <li><a href="#urls">Сводная таблица URL</a></li>
+        </ol>
+      </nav>
+    </header>
+
+    <section class="block" id="glossary">
+      <h2>Глоссарий сокращений</h2>
+      <p class="meta-line">Полные последовательности ниже. В кейсах: «Выполнить авторизацию … (глоссарий <strong>G-1</strong>)».</p>
+
+      <article class="gloss" id="g-1">
+        <h3>G-1 — Авторизация на Sauce Demo (<code>standard_user</code>)</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Ввести <code>standard_user</code> в поле с подписью <code>Username</code> в форме входа на <code>https://www.saucedemo.com</code>.</li>
+              <li>Ввести <code>secret_sauce</code> в поле с подписью <code>Password</code> в той же форме.</li>
+              <li>Нажать кнопку <code>Login</code> в форме входа.</li>
+            </ol>
+          </dd>
+          <dt>Краткая форма в кейсах</dt>
+          <dd class="gloss-short">«Выполнить авторизацию на Sauce Demo под <code>standard_user</code> (глоссарий <strong>G-1</strong>).»</dd>
+        </dl>
+      </article>
+
+      <article class="gloss" id="g-2">
+        <h3>G-2 — Авторизация The Internet (Form Authentication)</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть <code>https://the-internet.herokuapp.com/login</code>.</li>
+              <li>Ввести <code>tomsmith</code> в поле <code>Username</code> на странице <code>Login Page</code>.</li>
+              <li>Ввести <code>SuperSecretPassword!</code> в поле <code>Password</code> на странице <code>Login Page</code>.</li>
+              <li>Нажать кнопку <code>Login</code> на странице <code>Login Page</code>.</li>
+            </ol>
+          </dd>
+          <dt>Краткая форма в кейсах</dt>
+          <dd class="gloss-short">«Выполнить авторизацию Form Authentication (глоссарий <strong>G-2</strong>).»</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="block" id="swag">
+      <h2>1. Swag Labs (Sauce Demo)</h2>
+      <p class="meta-line"><strong>Базовый URL:</strong> <code>https://www.saucedemo.com</code> · пароль для стандартных пользователей: <code>secret_sauce</code></p>
+
+      <article class="tc" id="tc-swag-01">
+        <h3>TC-SWAG-01 — Полный путь: вход → товар → корзина → оформление → «Thank you»</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Выполнить шаги <strong>G-1</strong> (авторизация <code>standard_user</code>).</li>
+              <li>Нажать <code>Add to cart</code> на карточке товара <code>Sauce Labs Backpack</code> в списке <code>Products</code>.</li>
+              <li>Нажать на иконку корзины в правом верхнем углу шапки.</li>
+              <li>Нажать кнопку <code>Checkout</code> на странице корзины.</li>
+              <li>Ввести <code>Ann</code> в поле <code>First Name</code>, <code>Smith</code> в <code>Last Name</code>, <code>12345</code> в <code>Zip/Postal Code</code> на форме оформления.</li>
+              <li>Нажать кнопку <code>Continue</code>.</li>
+              <li>На странице <code>Checkout: Overview</code> нажать кнопку <code>Finish</code>.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Отображается заголовок <code>Thank you for your order!</code> на странице подтверждения заказа.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-swag-02">
+        <h3>TC-SWAG-02 — Корзина: добавить товар, проверить состав, удалить позицию</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Выполнить авторизацию на Sauce Demo под <code>standard_user</code> (<strong>G-1</strong>).</li>
+              <li>Нажать <code>Add to cart</code> на карточке <code>Sauce Labs Bike Light</code> в списке <code>Products</code>.</li>
+              <li>Нажать иконку корзины в шапке.</li>
+              <li>Убедиться, что в списке корзины есть строка <code>Sauce Labs Bike Light</code>.</li>
+              <li>Нажать <code>Remove</code> в строке товара <code>Sauce Labs Bike Light</code> на странице корзины.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Товар <code>Sauce Labs Bike Light</code> исчез из списка корзины; корзина пуста или без позиций.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-swag-03">
+        <h3>TC-SWAG-03 — Витрина: добавить товар и снять с карточки (без захода в корзину)</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Выполнить авторизацию (<strong>G-1</strong>).</li>
+              <li>Нажать <code>Add to cart</code> на карточке <code>Sauce Labs Backpack</code>.</li>
+              <li>Убедиться, что на карточке кнопка <code>Remove</code>, в шапке у корзины счётчик <code>1</code>.</li>
+              <li>Нажать <code>Remove</code> на той же карточке <code>Sauce Labs Backpack</code>.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>На карточке снова <code>Add to cart</code>; счётчик корзины в шапке отсутствует или <code>0</code>.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-swag-04">
+        <h3>TC-SWAG-04 — Негатив: заблокированный пользователь</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть <code>https://www.saucedemo.com</code>.</li>
+              <li>Ввести <code>locked_out_user</code> в <code>Username</code>, <code>secret_sauce</code> в <code>Password</code>.</li>
+              <li>Нажать <code>Login</code>.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Сообщение об ошибке содержит <code>Sorry, this user has been locked out.</code>; каталог <code>Products</code> не открывается.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-swag-05">
+        <h3>TC-SWAG-05 — Сессия: вход и выход из аккаунта</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Выполнить авторизацию (<strong>G-1</strong>).</li>
+              <li>Убедиться, что отображается каталог с заголовком <code>Products</code>.</li>
+              <li>Нажать кнопку меню (гамбургер) в левом верхнем углу.</li>
+              <li>Нажать <code>Logout</code> в боковом меню.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Снова видна форма входа с полями <code>Username</code>, <code>Password</code> и кнопкой <code>Login</code>.</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="block" id="net">
+      <h2>2. The Internet (Herokuapp)</h2>
+      <p class="meta-line"><strong>Базовый URL:</strong> <code>https://the-internet.herokuapp.com</code></p>
+
+      <article class="tc" id="tc-net-01">
+        <h3>TC-NET-01 — Полный цикл Form Authentication: вход и выход</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Выполнить авторизацию (<strong>G-2</strong>).</li>
+              <li>Убедиться, что видна область <code>Secure Area</code> и есть ссылка <code>Logout</code>.</li>
+              <li>Нажать ссылку <code>Logout</code>.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Отображается <code>Login Page</code> с полями <code>Username</code> и <code>Password</code>; сессия закрыта.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-net-02">
+        <h3>TC-NET-02 — Динамическая подгрузка: открытие → загрузка контента</h3>
+        <dl class="tc-rows">
+          <dt>URL старта</dt>
+          <dd><code>https://the-internet.herokuapp.com/dynamic_loading/1</code></dd>
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть URL.</li>
+              <li>Нажать <code>Start</code> в разделе <code>Dynamically Loaded Page Elements</code>.</li>
+              <li>Дождаться появления текста <code>Hello World!</code> в области под кнопкой <code>Start</code>.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Текст <code>Hello World!</code> виден на странице после загрузки.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-net-03">
+        <h3>TC-NET-03 — Настройка чекбоксов на странице Checkboxes</h3>
+        <dl class="tc-rows">
+          <dt>URL старта</dt>
+          <dd><code>https://the-internet.herokuapp.com/checkboxes</code></dd>
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть URL.</li>
+              <li>Привести первый чекбокс в разделе <code>Checkboxes</code> во включённое состояние (клик при необходимости).</li>
+              <li>Привести второй чекбокс в выключенное состояние (клик при необходимости).</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Первый чекбокс отмечен, второй — нет.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-net-04">
+        <h3>TC-NET-04 — Выбор значения в Dropdown List</h3>
+        <dl class="tc-rows">
+          <dt>URL старта</dt>
+          <dd><code>https://the-internet.herokuapp.com/dropdown</code></dd>
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть URL.</li>
+              <li>Раскрыть список <code>Dropdown List</code>.</li>
+              <li>Выбрать <code>Option 2</code>.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>В списке отображается выбранное значение <code>Option 2</code>.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-net-05">
+        <h3>TC-NET-05 — Переход к странице HTTP 200</h3>
+        <dl class="tc-rows">
+          <dt>URL старта</dt>
+          <dd><code>https://the-internet.herokuapp.com/status_codes</code></dd>
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть URL.</li>
+              <li>Нажать ссылку <code>200</code> в списке кодов.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>На открывшейся странице есть текст <code>This page returned a 200 status code.</code></dd>
+        </dl>
+        <aside class="note"><strong>Примечание:</strong> <code>Forgot Password</code> на Heroku при отправке часто отвечает <code>500</code> — в демо не используем.</aside>
+      </article>
+
+      <article class="tc" id="tc-net-06">
+        <h3>TC-NET-06 — Добавление и удаление элемента (Add/Remove)</h3>
+        <dl class="tc-rows">
+          <dt>URL старта</dt>
+          <dd><code>https://the-internet.herokuapp.com/add_remove_elements/</code></dd>
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть URL.</li>
+              <li>Нажать <code>Add Element</code> в разделе <code>Add/Remove Elements</code>.</li>
+              <li>Нажать появившуюся кнопку <code>Delete</code> у добавленного элемента.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Кнопка <code>Delete</code> исчезает вместе с элементом; остаётся только <code>Add Element</code>.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-net-07">
+        <h3>TC-NET-07 — Ввод числа на странице Inputs</h3>
+        <dl class="tc-rows">
+          <dt>URL старта</dt>
+          <dd><code>https://the-internet.herokuapp.com/inputs</code></dd>
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть URL.</li>
+              <li>Очистить поле number в разделе <code>Inputs</code>.</li>
+              <li>Ввести <code>42</code> в это поле.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>В поле отображается <code>42</code>.</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="block" id="todo">
+      <h2>3. TodoMVC (официальное демо Playwright)</h2>
+      <p class="meta-line"><strong>URL:</strong> <code>https://demo.playwright.dev/todomvc</code></p>
+
+      <article class="tc" id="tc-todo-01">
+        <h3>TC-TODO-01 — Полный цикл работы со списком задач</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть URL.</li>
+              <li>Ввести <code>Первая</code> в поле <code>What needs to be done?</code>, нажать <code>Enter</code>.</li>
+              <li>Ввести <code>Вторая</code> в то же поле, нажать <code>Enter</code>.</li>
+              <li>Нажать чекбокс у задачи <code>Первая</code>, чтобы отметить её выполненной.</li>
+              <li>Нажать ссылку <code>Active</code> в нижних фильтрах.</li>
+              <li>Убедиться, что в списке осталась только <code>Вторая</code>.</li>
+              <li>Нажать ссылку <code>Completed</code>.</li>
+              <li>Убедиться, что видна только <code>Первая</code>.</li>
+              <li>Нажать <code>Clear completed</code>.</li>
+              <li>Нажать ссылку <code>All</code>.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Выполненные задачи очищены; на фильтре <code>All</code> отображается только невыполненная задача <code>Вторая</code>.</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="block" id="blaze">
+      <h2>4. BlazeDemo</h2>
+      <p class="meta-line"><strong>URL:</strong> <code>https://blazedemo.com</code> · кнопка выбора рейса: <code>Choose This Flight</code></p>
+
+      <article class="tc" id="tc-blaze-01">
+        <h3>TC-BLAZE-01 — Поиск рейсов и переход к оформлению покупки</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть <code>https://blazedemo.com</code>.</li>
+              <li>В <code>Choose your departure city</code> выбрать <code>Boston</code>.</li>
+              <li>В <code>Choose your destination city</code> выбрать <code>London</code>.</li>
+              <li>Нажать <code>Find Flights</code>.</li>
+              <li>Убедиться, что заголовок содержит <code>Flights from Boston to London</code>.</li>
+              <li>Нажать <code>Choose This Flight</code> в первой строке таблицы рейсов.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Открыта страница покупки (<code>purchase.php</code>); видны поля формы. Заголовок маршрута на демо может не совпадать с городами — ориентироваться на форму и текст про <code>reserved</code> / <code>purchase</code>.</dd>
+        </dl>
+      </article>
+
+      <article class="tc" id="tc-blaze-02">
+        <h3>TC-BLAZE-02 — Альтернативный маршрут Paris → Rome до формы оплаты</h3>
+        <dl class="tc-rows">
+          <dt>Шаги</dt>
+          <dd>
+            <ol class="steps">
+              <li>Открыть <code>https://blazedemo.com</code>.</li>
+              <li>Выбрать <code>Paris</code> и <code>Rome</code> в полях городов отправления и назначения.</li>
+              <li>Нажать <code>Find Flights</code>.</li>
+              <li>Нажать <code>Choose This Flight</code> в первой строке таблицы.</li>
+            </ol>
+          </dd>
+          <dt>Ожидаемый результат</dt>
+          <dd>Заголовок страницы содержит <code>BlazeDemo Purchase</code>; на странице есть поле <code>Credit Card Number</code>.</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="block" id="optional">
+      <h2>5. Опционально / нестабильно</h2>
+      <article class="tc" id="tc-movies-01">
+        <h3>TC-MOVIES-01 — Демо каталога фильмов</h3>
+        <dl class="tc-rows">
+          <dt>URL</dt>
+          <dd><code>https://demo.playwright.dev/movies</code></dd>
+          <dt>Примечание</dt>
+          <dd>В части окружений страница отдаёт клиентскую ошибку. При успешной загрузке: поиск <code>Search for a movie...</code>, тема, ссылка <code>Home</code>. Полный путь зависит от стабильности страницы.</dd>
+        </dl>
+      </article>
+    </section>
+
+    <section class="block" id="urls">
+      <h2>Сводная таблица URL</h2>
+      <table class="summary">
+        <thead>
+          <tr><th>Кейсы</th><th>Базовый адрес</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>TC-SWAG-*</code></td><td><code>https://www.saucedemo.com</code></td></tr>
+          <tr><td><code>TC-NET-*</code></td><td><code>https://the-internet.herokuapp.com</code></td></tr>
+          <tr><td><code>TC-TODO-*</code></td><td><code>https://demo.playwright.dev/todomvc</code></td></tr>
+          <tr><td><code>TC-BLAZE-*</code></td><td><code>https://blazedemo.com</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer class="doc-footer">
+      <p>Исходная версия в Markdown: <code>BUGBUSTER_DEMO_TEST_CASES.md</code> в корне репозитория.</p>
+    </footer>
+  </div>
+  <script>
+(function () {
+  function updateMarkStatus() {
+    var articles = document.querySelectorAll("article.tc");
+    var marked = document.querySelectorAll("article.tc.is-marked");
+    var el = document.getElementById("mark-status");
+    if (el) el.textContent = "Отмечено: " + marked.length + " / " + articles.length;
+  }
+  document.querySelectorAll("article.tc").forEach(function (article) {
+    var h3 = article.querySelector(":scope > h3");
+    if (!h3) return;
+    var head = document.createElement("div");
+    head.className = "tc-head";
+    var label = document.createElement("label");
+    label.className = "mark-label";
+    var cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.className = "case-mark";
+    cb.setAttribute("autocomplete", "off");
+    cb.title = "Пометка сбросится после перезагрузки страницы";
+    var span = document.createElement("span");
+    span.textContent = "В Bugbuster";
+    label.appendChild(cb);
+    label.appendChild(span);
+    h3.parentNode.insertBefore(head, h3);
+    head.appendChild(label);
+    head.appendChild(h3);
+    cb.addEventListener("change", function () {
+      article.classList.toggle("is-marked", cb.checked);
+      updateMarkStatus();
+    });
+  });
+  updateMarkStatus();
+})();
+  </script>
+</body>
+</html>

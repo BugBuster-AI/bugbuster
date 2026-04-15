@@ -27,9 +27,11 @@ from api.actions import (check_usage_limits, search_for_filter_cases,
 from api.variables_actions import compute_variable_value_from_raw_config
 from config import (MINIO_ACCESS_KEY, MINIO_HOST, MINIO_PORT, MINIO_SECRET_KEY,
                     MINIO_SECURE, MINIO_PUBLIC_URL, REDIS_PREFIX, logger, redis_client, MINIO_USE_INTERNAL_PROXY)
-from db.models import (Case, Environment, GroupRunCase, GroupRunCaseCase,
-                       Project, ProjectUser, RunCase, SharedSteps, Suite, User,
-                       Variables, VariablesDetails)
+from api.services.codegen_case_read import enrich_case_read_codegen_async
+from api.services.codegen_eligibility import can_run_playwright_js
+from db.models import (Case, CasePlaywrightCodegen, Environment, GroupRunCase,
+                       GroupRunCaseCase, Project, ProjectUser, RunCase,
+                       SharedSteps, Suite, User, Variables, VariablesDetails)
 from db.session import async_session, transaction_scope
 from schemas import (CaseFinalStatusEnum, CaseRead, CaseStatusEnum,
                      CaseTypeEnum, EnvironmentRead, ExecutionModeEnum,
@@ -861,7 +863,8 @@ async def run_single_case(case_id: UUID4,
                           session: AsyncSession,
                           user: User,
                           background_video_generate: Optional[bool] = True,
-                          extra: Optional[str] = None) -> JSONResponse:
+                          extra: Optional[str] = None,
+                          execution_engine: str = "vlm") -> JSONResponse:
     try:
         async with session.begin():
 
@@ -913,6 +916,8 @@ async def run_single_case(case_id: UUID4,
 
             case_data.user_storage = case_variables
             case_data.case_type_in_run = CaseTypeEnum.AUTOMATED.value
+            # Effective Environment for this run (single case): from Case.environment_id.
+            # Clicker reads RunCase.current_case_version.environment.browser for codegen / playwright_js.
             case_data.environment = environment
             case_data.original_case = case_data_copy
 
@@ -924,6 +929,38 @@ async def run_single_case(case_id: UUID4,
                 case_data_copy
             )
             await copy_extra_to_action_plan(case_data)
+
+            eng = (execution_engine or "vlm").lower()
+            if eng not in ("vlm", "playwright_js"):
+                raise HTTPException(status_code=400, detail="Invalid execution_engine")
+            playwright_artifact_id = None
+            if eng == "playwright_js":
+                if not await can_run_playwright_js(session, case_id):
+                    raise HTTPException(
+                        status_code=409,
+                        detail={
+                            "reason_code": "playwright_js_blocked",
+                            "message_key": "run.error.playwright_js_blocked",
+                        },
+                    )
+                art_q = await session.execute(
+                    select(CasePlaywrightCodegen).where(
+                        CasePlaywrightCodegen.case_id == case_id,
+                        CasePlaywrightCodegen.is_current.is_(True),
+                    )
+                )
+                art = art_q.scalars().first()
+                if not art:
+                    raise HTTPException(
+                        status_code=409,
+                        detail={
+                            "reason_code": "playwright_js_no_artifact",
+                            "message_key": "run.error.playwright_js_blocked",
+                        },
+                    )
+                playwright_artifact_id = art.id
+
+            case_data.execution_engine = eng
             # вставка в БД
             run_case_record = {
                 "run_id": run_id,
@@ -936,7 +973,9 @@ async def run_single_case(case_id: UUID4,
                 "extra": extra,
                 "project_id": case_data.project_id,
                 "background_video_generate": background_video_generate,
-                "case_type_in_run": CaseTypeEnum.AUTOMATED.value
+                "case_type_in_run": CaseTypeEnum.AUTOMATED.value,
+                "execution_engine": eng,
+                "playwright_codegen_artifact_id": playwright_artifact_id,
             }
 
             query = insert(RunCase).values(**run_case_record)
@@ -944,7 +983,7 @@ async def run_single_case(case_id: UUID4,
             await session.flush()
 
             await update_usage_count(user.active_workspace_id, "start_group_run", 1)
-            return JSONResponse(content={"run_id": run_id})
+            return JSONResponse(content={"run_id": run_id, "execution_engine": eng})
 
     except HTTPException as e:
         raise e
@@ -1155,6 +1194,7 @@ async def start_group_run(group_run_id: UUID4, session: AsyncSession,
                 case_data.case_type_in_run = case.case_type_in_run
                 case_data.execution_mode = case.execution_mode
                 case_data.execution_order = case.execution_order
+                # Group Run Environment overrides the case's own environment_id for this run.
                 case_data.environment = environment
 
                 case_data.original_case = case_data_copy
@@ -1183,7 +1223,9 @@ async def start_group_run(group_run_id: UUID4, session: AsyncSession,
                           "background_video_generate": group_run_case.background_video_generate,
                           "case_type_in_run": case.case_type_in_run,
                           "execution_mode": case.execution_mode,
-                          "execution_order": case.execution_order
+                          "execution_order": case.execution_order,
+                          "execution_engine": "vlm",
+                          "playwright_codegen_artifact_id": None,
                           }
 
                 # Если кейс ручной, но run_manual не активен — не запускаем его
@@ -1466,6 +1508,13 @@ async def run_case_get_by_id(run_id: str, session: AsyncSession,
 
         current_case_version = run_case.current_case_version  # or case
         case_data = CaseRead.model_validate(current_case_version)
+        case_data = await enrich_case_read_codegen_async(
+            session,
+            run_case.case_id,
+            case_data,
+            workspace_id=user.active_workspace_id,
+            user_id=user.user_id,
+        )
 
         mess = {
             "run_id": str(run_case.run_id),
@@ -1485,7 +1534,11 @@ async def run_case_get_by_id(run_id: str, session: AsyncSession,
             "trace": trace,
             "show_trace": show_trace,
             "attachments": run_case.attachments,
-            "extra": run_case.extra
+            "extra": run_case.extra,
+            "execution_engine": getattr(run_case, "execution_engine", None) or "vlm",
+            "playwright_codegen_artifact_id": str(run_case.playwright_codegen_artifact_id)
+            if getattr(run_case, "playwright_codegen_artifact_id", None)
+            else None,
         }
         # logger.info(mess)
         return mess
@@ -1662,6 +1715,13 @@ async def get_runs_tree(current_user: User, session: AsyncSession,
 
                 current_case_version = run_case.current_case_version
                 case = CaseRead.model_validate(current_case_version)
+                case = await enrich_case_read_codegen_async(
+                    session,
+                    run_case.case_id,
+                    case,
+                    workspace_id=current_user.active_workspace_id,
+                    user_id=current_user.user_id,
+                )
 
                 final_entries.append({
                     "run_id": str(run_case.run_id),
@@ -1684,7 +1744,8 @@ async def get_runs_tree(current_user: User, session: AsyncSession,
                     "show_trace": show_trace,
                     "video": run_case.video,
                     "attachments": run_case.attachments,
-                    "extra": run_case.extra
+                    "extra": run_case.extra,
+                    "execution_engine": getattr(run_case, "execution_engine", None) or "vlm",
                 })
 
             # Подготовка данных о пагинации

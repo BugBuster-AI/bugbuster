@@ -22,7 +22,7 @@ from db.session import get_session
 from dependencies.auth import check_permissions, get_current_active_user
 from schemas import (CaseFinalStatusEnum, CaseStatusEnum, GroupRunCaseCreate,
                      GroupRunCaseOrderBy, GroupRunCaseRead, GroupRunCaseUpdate,
-                     UserRead)
+                     RunExecutionEngine, UserRead)
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
 
@@ -94,6 +94,7 @@ async def get_run_by_id(run_id: UUID4,
 async def start_run_by_case_id(case_id: UUID4,
                                background_video_generate: Optional[bool] = True,
                                extra: Optional[str] = None,
+                               execution_engine: RunExecutionEngine = Query(RunExecutionEngine.vlm),
                                current_user: UserRead = Depends(get_current_active_user),
                                session: AsyncSession = Depends(get_session)):
     """
@@ -101,7 +102,10 @@ async def start_run_by_case_id(case_id: UUID4,
     """
     await check_permissions("start_run_by_case_id", current_user.role, current_user.workspace_status)
     await check_usage_limits(current_user.active_workspace_id, "start_group_run", session)
-    return await run_single_case(case_id, session, current_user, background_video_generate, extra)
+    return await run_single_case(
+        case_id, session, current_user, background_video_generate, extra,
+        execution_engine=execution_engine.value,
+    )
 
 
 @router.delete("")

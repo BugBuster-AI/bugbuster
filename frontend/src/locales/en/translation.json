@@ -387,7 +387,12 @@
   "drawerTabs": {
     "run_history": "Run History",
     "execution": "Execution",
-    "general": "General"
+    "general": "General",
+    "codegen": "Code"
+  },
+  "drawerLayout": {
+    "expand_to_80_tooltip": "Expand drawer to 80% of the screen",
+    "restore_width_tooltip": "Restore default drawer width"
   },
   "statuses": {
     "preparation": "Preparation",
@@ -422,7 +427,14 @@
     "type": "Type",
     "name": "Name",
     "status": "Status",
-    "duration": "Duration"
+    "duration": "Duration",
+    "codegen": "Code",
+    "codegen_status_ready": "Ready",
+    "codegen_status_in_progress": "In progress",
+    "codegen_status_error": "Error",
+    "codegen_status_regen": "Regenerate",
+    "codegen_status_none": "No code",
+    "codegen_status_blocked": "Cannot generate"
   },
   "steps": {
     "before_steps": "Before Test Steps",
@@ -1087,7 +1099,10 @@
     }
   },
   "run": {
-    "button_create": "Start New"
+    "button_create": "Start New",
+    "error": {
+      "playwright_js_blocked": "The step narrative changed. Regenerate the code before running in Playwright mode."
+    }
   },
   "environment_page": {
     "title": "Environment",
@@ -1219,7 +1234,9 @@
     "prompt": "AI Processed Command",
     "thoughts": "Reflection Thoughts",
     "action_plan": "Action Plan",
+    "code": "Code",
     "expected": "AI Processed Expect",
+    "step_error_title": "Step error",
     "view_video": "View video result",
     "buttons": {
       "logs": "Logs",
@@ -1251,5 +1268,101 @@
     "check_cancelled": "Check cancelled",
     "coordinates_success": "Coordinates retrieved successfully",
     "reflection_failed": "Reflection check failed"
+  },
+  "codegen": {
+    "execution_view_run": "Steps & screenshots",
+    "execution_view_codegen": "Code generation",
+    "panel_title": "Automated test generation",
+    "generate": "Generate",
+    "retry_generate": "Regenerate",
+    "max_validation_attempts_label": "Max attempts per step",
+    "max_validation_attempts_tooltip": "Per NL step: one LLM draft, then further tries after Playwright/MCP validation errors (total cap, max 20). Larger values use more time and model calls.",
+    "job_max_attempts": "Attempt limit for this job: {{n}}",
+    "banner_title": "Code regeneration required",
+    "banner_body_nocode": "Step text changed relative to the last aligned code, or code has not been created yet. Complete a successful VLM run and generate (or regenerate) code.",
+    "banner_body_stale": "Step narrative changed. Regenerate code before running in Playwright mode.",
+    "artifact_source_mismatch": "Code was built from run {{sourceRunId}}; step screenshots for the current run are under \"Steps and screenshots\".",
+    "run_vlm": "VLM",
+    "run_script": "Code",
+    "execution_badge_vlm": "VLM",
+    "execution_badge_script": "Code",
+    "execution_mode_tooltip_vlm": "This run used the VLM engine (model-driven steps).",
+    "execution_mode_tooltip_code": "This run executed the generated Playwright script (Code).",
+    "tooltip_script_disabled": "Generate code and align it with steps first.",
+    "delete_artifact": "Delete generated code",
+    "delete_artifact_confirm": "Delete the current generated code? Script runs will be unavailable until a new successful generation.",
+    "delete_artifact_ok": "Code artifact removed",
+    "reset_job": "Reset job",
+    "reset_job_confirm": "Clear the codegen job status in Redis? \"Generate\" will be available again. If a worker is still processing this job, it may write the final status back.",
+    "reset_job_ok": "Codegen job status cleared",
+    "job_status_title": "Generation status",
+    "job_updated_at": "Updated: {{time}}",
+    "job_task_id": "Task ID",
+    "job_state": {
+      "queued": "Queued",
+      "running": "Running",
+      "success": "Finished",
+      "failure": "Failed",
+      "unknown": "Unknown"
+    },
+    "job_no_log_yet": "Detailed log is still empty: the job is waiting for a worker or has just started. If this lasts more than a few minutes, check the clicker worker, the queue, and that BACKEND_URL / SECRET_KEY_API are reachable from the worker.",
+    "er_step_draft_started": "Expected result step ({{uid}}): requesting draft from the LLM…",
+    "er_step_repair_round": "Expected result step ({{uid}}): repair round {{round}}/{{total}} after MCP error…",
+    "er_mcp_running": "MCP: running accumulated scenario (expected result, attempt {{attempt}}/{{max}})…",
+    "generation_log": "Generation log (LLM and Playwright MCP)",
+    "validation_fail_screenshot_caption": "Page state when validation failed (Playwright page screenshot)",
+    "show_all_log": "Show all {{count}} log entries",
+    "copy_log_tooltip": "Copy full log",
+    "expand_log": "Expand log",
+    "collapse_log": "Collapse log",
+    "expand_log_tooltip": "Show only the log at full panel height (hides the generated code).",
+    "collapse_log_tooltip": "Show log and code together (compact layout).",
+    "expand_code": "Expand code",
+    "collapse_code": "Collapse code",
+    "expand_code_tooltip": "Show only the generated code at full panel height (hides the log).",
+    "collapse_code_tooltip": "Show log and code together (compact layout).",
+    "copy_code_tooltip": "Copy full script",
+    "copy_failed": "Could not copy to clipboard",
+    "drawer_code_title": "Generated code",
+    "drawer_no_code": "Code hasn’t been generated yet. Complete a successful VLM run and generate code on the run details page.",
+    "drawer_regen_required": "Step narrative changed. Regenerate code on the run details page.",
+    "drawer_manual_case": "Code generation is only available for automated cases.",
+    "drawer_retry": "Retry",
+    "generated_code_title": "Generated automated test code (Playwright / JavaScript)",
+    "error": {
+      "run_not_passed": "Code generation is only available for a successful run. Complete a passing VLM run first, then try again.",
+      "run_not_vlm": "Code generation uses a VLM reference run. Pick a successful VLM run, or run the case with VLM first.",
+      "stale_reference_run": "After step changes, you need a new successful VLM run. Run the case with VLM, open that run’s result, then start code generation again.",
+      "in_progress": "Generation is already in progress.",
+      "invalid_run": "This run cannot be used as a reference for code generation.",
+      "run_not_found": "Run not found or you have no access.",
+      "case_not_found": "Case not found or you have no access."
+    },
+    "eligibility": {
+      "no_passed_vlm_run": "Code generation needs a successful VLM run for this case. Run it with VLM first.",
+      "case_not_automated": "Code generation is only available for automated cases.",
+      "run_not_found": "Run not found or you have no access.",
+      "run_not_passed": "Code generation is only available for a successful run. Complete a passing VLM run first, then try again.",
+      "run_not_vlm": "Code generation uses a VLM reference run. Pick a successful VLM run, or run the case with VLM first.",
+      "reference_run_stale_after_nl_edit": "After step changes, you need a new successful VLM run. Run the case with VLM, open that run’s result, then start code generation again.",
+      "codegen_in_progress": "Generation is already in progress.",
+      "case_not_found": "Case not found or you have no access.",
+      "invalid_run": "This run cannot be used as a reference for code generation.",
+      "codegen_step_failed": "Code generation failed on a step. Check the message and try again.",
+      "codegen_failed": "Code generation failed. Check steps and environment, or try again."
+    },
+    "failure_reason": {
+      "codegen_llm_connection_error": "Could not connect to the LLM provider",
+      "codegen_llm_timeout": "LLM request timed out",
+      "codegen_llm_rate_limit": "LLM rate limit exceeded — try again later",
+      "codegen_llm_auth_error": "LLM authentication failed — check API key configuration",
+      "codegen_exception": "Unexpected error during code generation",
+      "codegen_step_failed": "Code generation failed on a step",
+      "codegen_config": "Code generation is not configured on the server",
+      "codegen_node_runner_missing": "Playwright browser runner is not installed on the server",
+      "codegen_finalize_http_error": "Failed to save the generated code",
+      "codegen_variables_unresolved": "Failed to resolve variable from the variables set for code generation. Check the test case variables set and rerun the VLM run.",
+      "codegen_variables_invalid_name": "Variable name is not a valid JavaScript identifier for generated code. Rename the variable and retry generation."
+    }
   }
 }

@@ -204,6 +204,46 @@ def upload_to_minio(file_path, task_id, filename):
     return {"bucket": bucket_name, "file": object_name}
 
 
+def upload_text_to_minio(
+    data: str,
+    task_id: str,
+    filename: str,
+    content_type: str = "text/plain; charset=utf-8",
+) -> Dict[str, str]:
+    """Загрузка UTF-8 текста в bucket run-cases (для HTML/JSON артефактов codegen/VLM)."""
+    bucket_name = "run-cases"
+    object_name = f"{task_id}/{filename}"
+    encoded = data.encode("utf-8")
+    minioClient.put_object(
+        bucket_name,
+        object_name,
+        data=io.BytesIO(encoded),
+        length=len(encoded),
+        content_type=content_type,
+    )
+    return {"bucket": bucket_name, "file": object_name}
+
+
+def upload_bytes_to_minio(
+    data: bytes,
+    task_id: str,
+    relative_path: str,
+    content_type: str = "application/octet-stream",
+) -> Dict[str, str]:
+    """Бинарный объект в run-cases/{task_id}/{relative_path} (codegen screenshots и т.п.)."""
+    bucket_name = "run-cases"
+    rel = (relative_path or "").lstrip("/")
+    object_name = f"{task_id}/{rel}"
+    minioClient.put_object(
+        bucket_name,
+        object_name,
+        data=io.BytesIO(data),
+        length=len(data),
+        content_type=content_type,
+    )
+    return {"bucket": bucket_name, "file": object_name}
+
+
 class ActionValidator:
     VALID_KEYS = [
         "Backquote", "Minus", "Equal", "Backslash", "Backspace", "Tab", "Delete",

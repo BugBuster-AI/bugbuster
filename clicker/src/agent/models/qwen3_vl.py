@@ -260,11 +260,13 @@ class Qwen3VL(AgentBaseModel):
             **client_kwargs
         )
 
+        # OCR uses with_structured_output(OCRResult): JSON + extracted_text must fit in one completion.
+        # Low limits caused truncation → invalid JSON (EOF mid-string). Plain-text fallback is used on parse failure.
         self._ocr_client = ChatOpenAI(
             base_url=base_url,
             model=INFERENCE_MODEL_NAME,
             api_key=INFERENCE_API_KEY,
-            max_tokens=80,
+            max_tokens=4096,
             temperature=0.0,
             seed=0,
             timeout=30,
@@ -343,6 +345,11 @@ Do not include any text that is not visible in the image.
 Do not repeat or reference the user’s instruction unless that exact text appears in the image.
 If the text requested by the user is not visible in the image, return an empty string.
 
+*Brevity (critical)*
+If the instruction asks for one value from a list or column (e.g. “any username”), return only that single value (e.g. one username), not the entire list or page.
+Keep "extracted_text" as short as possible; never dump the full screen OCR.
+Inside JSON, the string must be valid JSON: escape double quotes as \\" and use \\n for line breaks — do not put raw newlines inside the string value.
+
 Your output MUST be a valid JSON object that strictly matches the following schema:
 
 {
@@ -352,6 +359,12 @@ Your output MUST be a valid JSON object that strictly matches the following sche
 Return only the JSON object.
 No explanations, no markdown, no additional text.
 """
+
+    def _create_ocr_plaintext_prompt(self) -> str:
+        return """You extract text from UI screenshots. Follow the user's instruction exactly.
+Output ONLY the extracted text as plain UTF-8 on a single line.
+No JSON, no markdown, no quotes around the value, no labels, no explanation.
+If nothing matches, output an empty response."""
 
     def _create_reasoning_prompt(self) -> str:
         return """
@@ -399,6 +412,30 @@ Provide your reasoning in 2-3 sentences.
         # response = model_with_parser.invoke(messages)
         response = await model_with_parser.ainvoke(messages)
         return response
+
+    async def _ocr_plaintext_fallback(self, image: Image.Image, instruction: str) -> str:
+        """If structured JSON OCR fails, ask for a single-line plain answer (avoids broken JSON)."""
+        buffered = BytesIO()
+        image.save(buffered, format="jpeg")
+        encoded_string = base64.b64encode(buffered.getvalue()).decode("utf-8")
+        system_prompt = self._create_ocr_plaintext_prompt()
+        prompt = f"User instruction: {instruction}"
+        messages = [
+            {"role": "system", "content": [{"type": "text", "text": system_prompt}]},
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                    {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{encoded_string}"}},
+                ],
+            },
+        ]
+        client = self._ocr_client.bind(max_tokens=512)
+        response = await client.ainvoke(messages)
+        content = getattr(response, "content", "") or ""
+        if not isinstance(content, str):
+            content = str(content)
+        return content.strip()
 
     def smart_resize(
             height: int, width: int, factor: int = 28, min_pixels: int = 56 * 56, max_pixels: int = 14 * 14 * 4 * 1280
@@ -839,11 +876,17 @@ Provide your reasoning in 2-3 sentences.
         system_prompt = self._create_ocr_prompt()
         prompt = f"User instruction: {instruction}"
 
-        result = await self._send_request_structured(
-            self._ocr_client, image, system_prompt, prompt, OCRResult
-        )
-
-        return result.extracted_text
+        try:
+            result = await self._send_request_structured(
+                self._ocr_client, image, system_prompt, prompt, OCRResult
+            )
+            return result.extracted_text
+        except Exception as e:
+            logger.warning(
+                "Structured OCR failed (%s); retrying with plain-text OCR fallback",
+                e,
+            )
+            return await self._ocr_plaintext_fallback(image, instruction)
 
     def _create_element_description_prompt(self, more_info) -> str:
         if not more_info:

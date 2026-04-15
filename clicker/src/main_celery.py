@@ -1,26 +1,35 @@
+"""
+Celery worker entrypoint: consumes RabbitMQ tasks for portal-clicker (run case, Playwright codegen).
+Sync Celery tasks bridge to async SQLAlchemy/agent code via run_async().
+"""
 import asyncio
 import os
 from datetime import datetime, timezone
 
 import asyncpg.exceptions
 from celery import Celery
-from celery.signals import worker_ready, worker_shutdown
+from celery.signals import worker_process_init, worker_ready, worker_shutdown
 from langfuse import get_client
 
 from agent.graph import run_graph
+from agent.playwright_js_run import run_playwright_js_case
+from codegen.playwright_codegen_task import run_playwright_codegen_async
 from core.celeryconfig import RABBIT_PREFIX, logger, redis_client, server_ident
 from infra.db import async_engine, check_run_case_status, update_run_case_status, update_run_case_stop
 
+# Windows + Celery multiprocessing: avoids fork-related issues when using prefork pool locally.
 if os.name == 'nt':
     os.environ.setdefault('FORKED_BY_MULTIPROCESSING', '1')
 
 app = Celery()
 app.config_from_object("core.celeryconfig")
 
+# Tracks in-flight case runs per worker instance so we can mark them failed on shutdown/restart.
 RUNNING_TASKS_KEY = f"celery:running_tasks:{server_ident}"
 
 
 def is_db_error(exc):
+    """True if the exception should be treated as infrastructure/DB failure (avoid aggressive Redis cleanup)."""
     return (
         isinstance(exc, asyncpg.exceptions.PostgresError) or
         exc.__class__.__module__ == 'asyncpg.exceptions' or
@@ -29,6 +38,7 @@ def is_db_error(exc):
 
 
 def run_async(coro):
+    """Run an asyncio coroutine from sync Celery task code (get/create event loop, then run_until_complete)."""
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -42,6 +52,15 @@ def run_async(coro):
     return loop.run_until_complete(coro)
 
 
+@worker_process_init.connect
+def _dispose_sqlalchemy_pool_after_fork(**_kwargs):
+    """После fork в prefork/process pool дескрипторы пула из родителя недействительны; плюс pgbouncer + asyncpg."""
+    try:
+        asyncio.run(async_engine.dispose())
+    except Exception as exc:
+        logger.warning("async_engine.dispose() in worker_process_init: %s", exc)
+
+
 @app.task(name=f'{RABBIT_PREFIX}_celery.portal-clicker.run_single_case_queue')
 def run_single_case_queue(**kwargs):
 
@@ -53,6 +72,7 @@ def run_single_case_queue(**kwargs):
     db_error = False
 
     try:
+        # User/admin requested stop: persist stopped state and exit without running the case.
         if redis_client.sismember("stop_task", run_id):
             logger.info(f"Stopping task {run_id}")
             run_async(update_run_case_stop(run_id, datetime.now(timezone.utc)))
@@ -63,12 +83,29 @@ def run_single_case_queue(**kwargs):
         logger.info(f"Starting task {run_id} for user {user_id}\n{case=}")
         redis_client.sadd(RUNNING_TASKS_KEY, run_id)
 
-        # playwright
+        # Skip if the run row is already in a terminal state in the DB (idempotent guard).
         run_case_status = run_async(check_run_case_status(run_id))
         if run_case_status is False:
             logger.info(f"Task {run_id} in final status for user {user_id}")
             return
-        run_async(run_graph(run_id, case, user_id, environment, background_video_generate))
+
+        # Branch by execution engine: LLM/VLM agent graph vs pre-generated Playwright JS artifact.
+        execution_engine = kwargs.get("execution_engine", "vlm")
+        if execution_engine == "playwright_js":
+            run_async(
+                run_playwright_js_case(
+                    run_id,
+                    case,
+                    user_id,
+                    environment,
+                    background_video_generate,
+                    codegen_artifact_id=kwargs.get("codegen_artifact_id"),
+                )
+            )
+        else:
+            run_async(run_graph(run_id, case, user_id, environment, background_video_generate))
+
+        # Flush observability traces (Langfuse) before returning success.
         langfuse = get_client()
         langfuse.flush()
         logger.info(f"Task {run_id} completed successfully for user {user_id}")
@@ -95,9 +132,10 @@ def run_single_case_queue(**kwargs):
                 logger.critical(f"Failed to update failed status for {run_id}: {er}")
                 db_error = True
             logger.error(f"Error in task {run_id}: {er}")
-        raise  # Пробрасываем для Celery что задача завершилась с ошибкой
+        raise  # Re-raise so Celery marks the task as failed / applies retry policy.
     finally:
         try:
+            # Leave run_id in Redis if DB is broken so ops can reconcile; otherwise remove from in-flight set.
             if not db_error:
                 redis_client.srem(RUNNING_TASKS_KEY, run_id)
             logger.info(f"Task {run_id} cleanup completed")
@@ -107,6 +145,7 @@ def run_single_case_queue(**kwargs):
 
 @worker_shutdown.connect
 def handle_worker_shutdown(sender, **kwargs):
+    """On worker process exit: mark any tasks we were running as failed (best effort)."""
     logger.info("Worker is shutting down. Updating running tasks to failed...")
 
     running_tasks = redis_client.smembers(RUNNING_TASKS_KEY)
@@ -117,15 +156,23 @@ def handle_worker_shutdown(sender, **kwargs):
         try:
             run_async(update_run_case_status(task_id, 'failed', 'service shutdown',
                                              datetime.now(timezone.utc), datetime.now(timezone.utc), 0))
-            run_async(async_engine.dispose())
         except Exception as er:
             logger.error(f"Error updating task {task_id}: {er}")
 
     redis_client.delete(RUNNING_TASKS_KEY)
 
+    try:
+        run_async(async_engine.dispose())
+    except Exception as er:
+        logger.warning(f"async_engine.dispose() on shutdown: {er}")
+
 
 @worker_ready.connect
 def handle_worker_startup(**kwargs):
+    """
+    On worker start: clear stale bookkeeping from a previous crash/redeploy.
+    Anything still listed as running is marked failed; pending stop flags are applied as stopped.
+    """
     logger.info("Worker startup initiated. Checking for stale tasks...")
 
     running_tasks = redis_client.smembers(RUNNING_TASKS_KEY)
@@ -153,15 +200,33 @@ def handle_worker_startup(**kwargs):
 
     redis_client.delete("stop_task")
 
-    # посмотреть redis_client.sismember("stop_task", run_id), сравнить с БД стопнутые и почистить
+    # TODO: reconcile redis_client.sismember("stop_task", run_id) with DB stopped runs and prune orphans.
+
+
+RUNNING_CODEGEN_TASKS_KEY = f"celery:running_codegen_tasks:{server_ident}"
+
+
+@app.task(name=f'{RABBIT_PREFIX}_celery.portal-clicker.run_playwright_codegen_queue')
+def run_playwright_codegen_queue(**kwargs):
+    """Async LLM + MCP/browser validation pipeline for Playwright JS codegen; kwargs forwarded from backend."""
+    task_id = kwargs.get("task_id", "unknown")
+    try:
+        redis_client.sadd(RUNNING_CODEGEN_TASKS_KEY, task_id)
+        run_async(run_playwright_codegen_async(**kwargs))
+    except Exception as er:
+        logger.error(f"codegen task error: {er}", exc_info=True)
+        raise
+    finally:
+        redis_client.srem(RUNNING_CODEGEN_TASKS_KEY, task_id)
+        get_client().flush()
 
 
 if __name__ == "__main__":
+    # Local dev: single-process worker. Production typically uses: celery -A main_celery worker --loglevel=info ...
     worker = app.Worker(
-        # можно указать список модулей с тасками
-        # include=['main_celery'],
+        # include=['main_celery'],  # optional explicit task modules
         loglevel='INFO',
-        pool='solo',  # Используем solo pool вместо prefork
+        pool='solo',  # single-process pool (no prefork); avoids fork issues on some platforms
         concurrency=1
     )
     worker.start()

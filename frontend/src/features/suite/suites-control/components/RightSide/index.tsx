@@ -1,4 +1,5 @@
 import { PlusOutlined } from '@ant-design/icons';
+import { URL_QUERY_KEYS } from '@Common/consts/searchParams.ts';
 import { useThemeToken } from '@Common/hooks';
 import { useSuiteStore } from '@Entities/suite/store';
 import { ITestCase } from '@Entities/test-case/models';
@@ -30,6 +31,7 @@ export const RightSide = (): ReactElement => {
     const selectedSuite = useSuiteStore((state) => state.selectedSuite)
     const loading = useSuiteStore((state) => state.loading)
     const setCurrentCase = useTestCaseStore((state) => state.setCurrentCase)
+    const setActiveDrawerKey = useTestCaseStore((state) => state.setActiveDrawerKey)
     const currentCase = useTestCaseStore((state) => state.currentCase)
 
     const currentSuiteId = selectedSuite?.suite_id || null
@@ -52,20 +54,28 @@ export const RightSide = (): ReactElement => {
         setDrawerOpen(false)
 
         updateSearchParams((prev) => {
-            prev.delete('open')
-            prev.delete('caseId')
+            prev.delete(URL_QUERY_KEYS.OPEN)
+            prev.delete(URL_QUERY_KEYS.CASE_ID)
+            prev.delete(URL_QUERY_KEYS.DRAWER_STATE)
 
             return prev
         })
     }
 
     useEffect(() => {
-        const caseId = searchParams.get('caseId')
-        const currentCase = find(caseTableData, (item: ITestCase) => String(item.case_id) === caseId)
+        const caseId = searchParams.get(URL_QUERY_KEYS.CASE_ID)
+        const openParam = searchParams.get(URL_QUERY_KEYS.OPEN)
+        const foundCase = find(caseTableData, (item: ITestCase) => String(item.case_id) === caseId)
 
-        if (caseId && caseTableData && currentCase) {
-            setCurrentCase(currentCase)
-            setDrawerOpen(true)
+        if (caseId && caseTableData && foundCase) {
+            setCurrentCase(foundCase)
+
+            if (openParam === '1') {
+                setActiveDrawerKey('1')
+                setDrawerOpen(true)
+            } else {
+                setDrawerOpen(false)
+            }
         }
     }, [searchParams, caseTableData]);
 

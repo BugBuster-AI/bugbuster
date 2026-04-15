@@ -163,6 +163,8 @@ export interface IRunById {
     logs?: string;
     trace?: string;
     show_trace?: string
+    execution_engine?: 'vlm' | 'playwright_js'
+    playwright_codegen_artifact_id?: string | null
 }
 
 export interface IRunList extends IPaginationResponse {

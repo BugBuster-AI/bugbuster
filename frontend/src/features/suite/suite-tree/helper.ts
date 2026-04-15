@@ -41,7 +41,7 @@ export function findSuiteWithAllParents (suites: ISuite[], targetSuiteId: string
 export function findSuiteByCaseId (suites: ISuite[], caseId: string): ISuite | undefined {
     // Проходим по каждому сьюту на текущем уровне вложенности
     for (const suite of suites) {
-        const hasCase = suite.cases.some((testCase) => testCase.case_id === caseId);
+        const hasCase = suite.cases.some((testCase) => String(testCase.case_id) === String(caseId));
 
         if (hasCase) {
             return suite;

@@ -11,6 +11,10 @@ from utils.db_utils import update_video_path
 from utils.minio_utils import (download_from_minio, get_minio_client,
                                upload_bytes_buffer_to_minio)
 
+# Если последний screencast-frame приходит после after.endTime, (end_time - ts) отрицательно —
+# раньше кадр выбрасывали; задаём минимальный хвост для ffmpeg concat.
+LAST_SCREENCAST_FRAME_TAIL_SEC = 0.3
+
 
 def extract_zip_to_dir(zip_file_path, extract_to_path):
     with zipfile.ZipFile(zip_file_path, 'r') as z:
@@ -67,8 +71,9 @@ def find_matching_screenshots(log_data):
                         duration = (matching_screenshots[j + 1]['timestamp'] - screenshot['timestamp']) / 1000
                     else:
                         duration = (end_time - screenshot['timestamp']) / 1000
-                        if duration < 0:
-                            continue  # пропускаем самую последнюю картинку с неизвестным dur
+                        # Кадры после after.endTime (хвост screencast) дают duration <= 0 — не отбрасываем.
+                        if duration <= 0:
+                            duration = LAST_SCREENCAST_FRAME_TAIL_SEC
 
                     duration_rounded = round(duration, 6)
                     if duration_rounded < 0.001:  # Минимальная длительность 1ms

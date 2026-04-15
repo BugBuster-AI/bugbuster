@@ -15,7 +15,7 @@ import { useRunningStore } from '@Pages/RunningCase/store';
 import { IEditingStep } from '@Pages/RunningCase/store/models.ts';
 import { isNotUntestedStep } from '@Pages/RunningCase/utils/isNotUntestedStep.ts';
 import { runToCase } from '@Pages/RunningCase/utils/runToCase.ts';
-import { Button, Flex, message, Progress, Typography } from 'antd';
+import { Button, Flex, message, Progress, Tag, Tooltip, Typography } from 'antd';
 import dayjs from 'dayjs'
 import get from 'lodash/get';
 import isArray from 'lodash/isArray';
@@ -201,6 +201,20 @@ export const ControlPanel = () => {
 
                 <StatusBadge status={ currentRun.status }/>
 
+                <Tooltip
+                    title={
+                        currentRun.execution_engine === 'playwright_js'
+                            ? t('codegen.execution_mode_tooltip_code')
+                            : t('codegen.execution_mode_tooltip_vlm')
+                    }
+                >
+                    <Tag style={ { cursor: 'default', margin: 0 } }>
+                        {currentRun.execution_engine === 'playwright_js'
+                            ? t('codegen.execution_badge_script')
+                            : t('codegen.execution_badge_vlm')}
+                    </Tag>
+                </Tooltip>
+
                 <Typography.Text>
                     <ClockCircleOutlined style={ { marginRight: '8px' } }/>
                     {formatSeconds(Number(currentRun.complete_time || 0), t)}
@@ -238,6 +252,7 @@ export const ControlPanel = () => {
 
                         <RunCaseButton
                             ref={ runCaseRef }
+                            canRunPlaywrightJs={ currentRun?.case?.can_run_playwright_js === true }
                             case_id={ caseId!! }
                             disabled={ isEditingCase }
                             isTargetBlank={ false }

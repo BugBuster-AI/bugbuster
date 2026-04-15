@@ -168,6 +168,14 @@ class StepState(BaseModel):
     key_to_press: Optional[str] = Field(default=None, description="Key to press")
     tab_name: Optional[str] = Field(default=None, description="Tab name")
     extra: Optional[Dict[str, Any]] = Field(default=None, description="extra")
+    vlm_dom_before_full: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="MinIO ref {bucket,file} для page.content() до шага (codegen)",
+    )
+    vlm_dom_before_focus: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="MinIO ref для focused JSON до шага (codegen)",
+    )
 
 
 def merge_step_states(step_state1: Optional[Union[StepState, dict]], step_state2: Optional[Union[StepState, dict]]) -> Optional[Union[StepState, dict]]:
@@ -205,8 +213,8 @@ class RetrySettings(BaseModel):
     @model_validator(mode='after')
     def validate_retries(self):
         if self.timeout is None:
-            # 30 по дефолту
             self.timeout = 30
+        return self
 
 
 class AgentState(BaseModel):

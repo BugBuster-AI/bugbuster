@@ -1,0 +1,24 @@
+{
+  "name": "bugbuster-codegen-runner",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "postinstall": "node scripts/patch-mcp-runexpect.cjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@playwright/test": "1.58.0",
+    "@playwright/mcp": "0.0.64",
+    "playwright": "1.58.0",
+    "playwright-core": "1.58.0"
+  },
+  "overrides": {
+    "@playwright/mcp": {
+      "playwright": "1.58.0",
+      "playwright-core": "1.58.0"
+    },
+    "playwright": "1.58.0",
+    "playwright-core": "1.58.0"
+  }
+}

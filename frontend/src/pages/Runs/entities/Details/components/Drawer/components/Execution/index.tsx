@@ -66,7 +66,7 @@ export const ExecutionDrawer = () => {
             <InfoField fieldName={ t('group_run.execution.url') } value={ testCase?.url }/>
         </Flex>
 
-        <div style={ { flex: 1, width: '100%', marginTop: '10px', paddingBottom: 42 } }>
+        <div style={ { flex: 1, minHeight: 0, width: '100%', marginTop: '10px', paddingBottom: 42 } }>
             {isUntested && <UntestedSteps/>}
             {isProgress && <InProgressCase/>}
             {isFinished && <FinishedCase/>}

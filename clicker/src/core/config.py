@@ -94,3 +94,19 @@ SOP_REWRITER_MODEL_NAME = os.getenv(
 )
 SOP_REWRITER_PROVIDER = os.getenv("SOP_REWRITER_PROVIDER", "openai")
 SOP_REWRITER_BASE_URL = os.getenv("SOP_REWRITER_BASE_URL", "")
+
+CODEGEN_AGENT_BASE_URL = os.getenv("CODEGEN_AGENT_BASE_URL") or INFERENCE_BASE_URL
+CODEGEN_AGENT_API_KEY = os.getenv("CODEGEN_AGENT_API_KEY") or INFERENCE_API_KEY
+CODEGEN_AGENT_MODEL_NAME = os.getenv("CODEGEN_AGENT_MODEL_NAME") or INFERENCE_MODEL_NAME
+CODEGEN_AGENT_PROVIDER = os.getenv("CODEGEN_AGENT_PROVIDER") or SOP_REWRITER_PROVIDER
+
+# HTTP к portal-backend (finalize codegen и др.): в Docker обычно задаётся в compose; локально — localhost.
+BACKEND_BASE_URL = os.getenv("BACKEND_BASE_URL", "http://127.0.0.1:7665").rstrip("/")
+# Должен совпадать с SECRET_KEY_API backend (заголовок X-Internal-Token для /api/internal/codegen).
+SECRET_KEY_API = os.getenv("SECRET_KEY_API", "")
+
+if not SECRET_KEY_API:
+    logger.warning(
+        "SECRET_KEY_API is not set — internal codegen API calls to backend will fail. "
+        "Set SECRET_KEY_API env variable before running codegen tasks."
+    )

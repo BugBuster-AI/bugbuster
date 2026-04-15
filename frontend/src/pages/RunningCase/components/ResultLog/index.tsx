@@ -1,4 +1,5 @@
 import { FieldTimeOutlined } from '@ant-design/icons';
+import { RunErrorText } from '@Common/components/RunErrorText';
 import { useThemeToken } from '@Common/hooks';
 import { formatSeconds } from '@Common/utils/formatSeconds.ts';
 import { ERunStatus } from '@Entities/runs/models';
@@ -54,8 +55,8 @@ export const ResultLog = () => {
         >
             <Flex gap={ 8 } vertical>
                 {Boolean(run?.run_summary) && (
-                    <Typography.Text style={ { whiteSpace: 'pre-line', maxHeight: 142, overflow: 'auto' } } >
-                        {run?.run_summary}
+                    <Typography.Text style={ { maxHeight: 142, overflow: 'auto', display: 'block' } } >
+                        <RunErrorText text={ run?.run_summary } />
                     </Typography.Text>
                 )}
             </Flex>

@@ -59,6 +59,9 @@ task_queues = (
     Queue(f'{RABBIT_PREFIX}_celery.portal-clicker.run_single_case_queue',
           Exchange(f'{RABBIT_PREFIX}_portal-clicker'),
           routing_key=f'{RABBIT_PREFIX}_celery.portal-clicker.run_single_case_queue'),
+    Queue(f'{RABBIT_PREFIX}_celery.portal-clicker.run_playwright_codegen_queue',
+          Exchange(f'{RABBIT_PREFIX}_portal-clicker'),
+          routing_key=f'{RABBIT_PREFIX}_celery.portal-clicker.run_playwright_codegen_queue'),
 )
 
 LANGFUSE_HOST = os.getenv("LANGFUSE_HOST", "http://dlserver:3300")

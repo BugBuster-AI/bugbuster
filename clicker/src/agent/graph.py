@@ -3,6 +3,7 @@ import json
 import logging
 import time
 import traceback
+from typing import Optional
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
@@ -30,11 +31,14 @@ from agent.graph_actions import (
     reflection_step,
 )
 from agent.graph_utils import check_annotated_screenshot_exists, clean_up_directories
+from agent.trace_step_marker import inject_trace_step_marker
+from agent.vlm_step_dom import capture_vlm_step_dom_before
 from agent.schemas import AgentState, InputState, RetrySettings, StepState
 from browser_actions.extract_video_from_trace import process_trace_and_generate_video
 from browser_actions.other import process_variables_before_plain_step
 from browser_actions.tab_manager import TabManager, is_local_url
 from browser_actions.user_storage import UserStorage
+from codegen.effective_browser import chrome_desktop_user_agent
 from core.celeryconfig import DB_NAME, redis_client
 from core.config import INFERENCE_MODEL, LOCALHOST_DISABLED, PROXY_ENABLED, REFLECTION_MODEL
 from core.schemas import CaseStatusEnum, Lang
@@ -77,6 +81,15 @@ ACTION_MAP = {
 }
 
 CONTEXT_SCREENSHOT_SEMAPHORE = asyncio.Semaphore(5)
+
+
+def _step_uid_from_case_step(case_step) -> Optional[str]:
+    """UUID шага из кейса — тот же, что для vlm_dom/{step_uid} в MinIO."""
+    if isinstance(case_step, dict) and case_step.get("step_uid"):
+        s = str(case_step["step_uid"]).strip()
+        if s:
+            return s
+    return None
 
 
 async def prepare_context_screenshots(*,
@@ -427,37 +440,45 @@ async def init_browser(input_state: InputState) -> AgentState:
             browser = await p.firefox.launch(headless=True,
                                              proxy=proxy_settings,
                                              firefox_user_prefs={"dom.webdriver.enabled": False})
-            user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0"
+            # Не подменяем User-Agent: тот же Firefox, что `playwright install firefox` (как в Code/MCP).
+            user_agent = None
         elif browser_type == 'chrome':
-            browser = await p.chromium.launch(channel='chrome',
-                                              proxy=proxy_settings,
-                                              headless=True,
-                                              args=[
-                                                  "--disable-blink-features=AutomationControlled",
-                                                  "--disable-web-security"
-                                              ])
-            user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.58 Safari/537.36"
+            # Google Chrome из `playwright install chrome` — тот же движок, что MCP `--browser chrome` и trace.
+            browser = await p.chromium.launch(
+                channel='chrome',
+                proxy=proxy_settings,
+                headless=True,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--disable-web-security",
+                ],
+            )
+            user_agent = chrome_desktop_user_agent(browser.version)
 
         else:  # вернуть ошибку что такого нет?
             browser = await p.firefox.launch(headless=True,
                                              proxy=proxy_settings,
                                              firefox_user_prefs={"dom.webdriver.enabled": False})
-            user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0"
+            user_agent = None
 
-        context = await browser.new_context(
-            viewport={"width": width, "height": height},
-            locale="en-US",
-            bypass_csp=True,
-            ignore_https_errors=True,
-            extra_http_headers={
-                "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Accept-Encoding": "gzip, deflate, br, zstd",
-                "Upgrade-Insecure-Requests": "1",
-                "User-Agent": user_agent,
-                "Cache-Control": "max-age=0"
-            }
-        )
+        extra_headers = {
+            "Accept": "image/avif,image/webp,image/png,image/svg+xml,image/*;q=0.8,*/*;q=0.5",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "Upgrade-Insecure-Requests": "1",
+            "Cache-Control": "max-age=0",
+        }
+
+        _ctx_kw = {
+            "viewport": {"width": width, "height": height},
+            "locale": "en-US",
+            "bypass_csp": True,
+            "ignore_https_errors": True,
+            "extra_http_headers": extra_headers,
+        }
+        if user_agent:
+            _ctx_kw["user_agent"] = user_agent
+        context = await browser.new_context(**_ctx_kw)
 
         agent_state.playwright = p
         agent_state.browser = browser
@@ -467,13 +488,13 @@ async def init_browser(input_state: InputState) -> AgentState:
         agent_state.tab_manager = TabManager(agent_state.context)
         agent_state.page = await agent_state.tab_manager.initialize_pages()
 
-        # пишем трассировку
-        await agent_state.context.tracing.start(title=case_name,
-                                                screenshots=True,
-                                                snapshots=True,
-                                                sources=False,
-                                                screencast_options={'width': width, 'height': height, 'quality': 90}
-                                                )
+        # пишем трассировку (screencast в trace включается драйвером 1.58+ с дефолтными опциями; см. playwright trace recorder)
+        await agent_state.context.tracing.start(
+            title=case_name,
+            screenshots=True,
+            snapshots=True,
+            sources=False,
+        )
 
         # await page.route("**/*", handle_request)
         try:
@@ -550,6 +571,7 @@ async def step_preparation(state: AgentState):
         extra=current_step.get('extra', None),
     )
     state.step_state = step_state
+    current_action_type = state.step_state.action
     state.status = CaseStatusEnum.PASSED
 
     await process_variables_before_plain_step(state)
@@ -561,6 +583,34 @@ async def step_preparation(state: AgentState):
         return state
 
     state.page = state.tab_manager.current_page()
+
+    step_uid_for_trace: Optional[str] = None
+    if state.current_step_index < len(state.case_steps):
+        cs = state.case_steps[state.current_step_index]
+        if isinstance(cs, dict) and cs.get("step_uid"):
+            step_uid_for_trace = str(cs.get("step_uid"))
+    try:
+        await inject_trace_step_marker(state.page, step_uid_for_trace)
+    except Exception:
+        state.logger.debug("inject_trace_step_marker skipped", exc_info=True)
+
+    # DOM до шага (full HTML + focused JSON) — и для expected_result: codegen ищет
+    # run-cases/{run_id}/vlm_dom/{step_uid}.before.* по uid этого шага.
+    if step_uid_for_trace and state.page:
+        try:
+            dom_refs = await capture_vlm_step_dom_before(
+                state.page,
+                str(state.run_id),
+                step_uid_for_trace,
+                state.width,
+                state.height,
+            )
+            if dom_refs:
+                state.step_state.vlm_dom_before_full = dom_refs.get("dom_before_full")
+                state.step_state.vlm_dom_before_focus = dom_refs.get("dom_before_focus")
+        except Exception:
+            state.logger.debug("capture_vlm_step_dom_before skipped", exc_info=True)
+
     state.logger.info(
         f"======== Iteration Start ========\n"
         f"Step: {state.current_step_index}\n"
@@ -569,8 +619,6 @@ async def step_preparation(state: AgentState):
         f"Active page: {state.page}\n"
         f"Capturing before screenshot..."
     )
-
-    current_action_type = state.step_state.action
 
     if current_action_type == "expected_result":
         # expected_result: используем скриншоты ПРЕДЫДУЩЕГО шага
@@ -790,6 +838,13 @@ async def finish_iteration(state: AgentState) -> AgentState:
         "before_annotated_url": before_annotated_url,
         "after": after_url
     }
+    _su = _step_uid_from_case_step(state.case_steps[state.current_step_index])
+    if _su:
+        mess["step_uid"] = _su
+    if getattr(state.step_state, "vlm_dom_before_full", None):
+        mess["dom_before_full"] = state.step_state.vlm_dom_before_full
+    if getattr(state.step_state, "vlm_dom_before_focus", None):
+        mess["dom_before_focus"] = state.step_state.vlm_dom_before_focus
     await update_run_case_steps(state.session, state.run_id, mess)
     state.completed_steps.append(state.step_state)
 
@@ -873,6 +928,13 @@ async def send_error_message(state: AgentState) -> AgentState:
         "before_annotated_url": before_annotated_url,
         "after": after_url
     }
+    _su = _step_uid_from_case_step(state.case_steps[state.current_step_index])
+    if _su:
+        mess["step_uid"] = _su
+    if getattr(state.step_state, "vlm_dom_before_full", None):
+        mess["dom_before_full"] = state.step_state.vlm_dom_before_full
+    if getattr(state.step_state, "vlm_dom_before_focus", None):
+        mess["dom_before_focus"] = state.step_state.vlm_dom_before_focus
     await update_run_case_steps(state.session, state.run_id, mess)
     return state
 
