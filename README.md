@@ -179,6 +179,6 @@ After startup, the platform is available at:
 <details>
 <summary><b>Create your first test case</b></summary>
 
-*Coming soon — TBD*
+See the user guide: [docs.bug-buster.ru](https://docs.bug-buster.ru)
 
 </details>
