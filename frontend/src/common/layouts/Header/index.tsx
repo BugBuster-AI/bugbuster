@@ -38,7 +38,7 @@ export const PageHeader = ({ renderAvatar }: IProps): ReactElement => {
     ]
 
     const handleDocumentationClick = () => {
-        window.open('https://docs.bug-buster.ru/rukovodstvo-polzovatelya/chto-takoe-bugbuster', '_blank')
+        window.open('https://docs.bug-buster.ru', '_blank')
     }
 
     const logo = version === 'ru' ?
